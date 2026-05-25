@@ -1,0 +1,55 @@
+=== red_intro_oak_remaining_text_clear_once ===
+timestamp: 2026-05-25T12:03:48+00:00
+git_head: 6573f96
+model: deepseek-v4-flash
+server: http://127.0.0.1:9876
+
+=== OBSERVE (frame 5120) ===
+game: Pokemon Red/Blue (USA)
+map: Red's House 2F (map_id=38)
+position: (3,6) down
+keys: [] / joy_ignore: 0
+player: ×?? / rival: A
+dialog.active: true, text_box_id: 1, text: "A" (0x80)
+screenshot: 4 colors, bottom=974, small bottom textbox
+
+=== BATCHES 1-12 ===
+Each: press_a + wait_90
+
+batch  1 (5230): dialog active
+batch  2 (5340): dialog active
+batch  3 (5450): dialog active
+batch  4 (5560): dialog active, facing down→up (auto-orient)
+batch  5 (5670): dialog active, facing up
+batch  6 (5780): dialog active, facing up
+batch  7 (5890): dialog active, facing up
+batch  8 (6000): dialog active, facing up
+batch  9 (6110): dialog active, facing up
+batch 10 (6220): *** SCREENSHOT CHANGED *** center=704→4064, bottom=974→5120
+                  Full Oak portrait dialog
+batch 11 (6330): same state
+batch 12 (6440): screenshot IDENTICAL to batch 10 — text stalled
+
+Scenes observed:
+1. Small bottom textbox (frame 5120-6110)
+2. Full Oak sprite + dialog (frame 6220+)
+3. Text stalled at batch 10-12 (identical frames)
+
+=== FAIL STOP ===
+oak_intro_text_still_remaining_after_12_a: true
+12 batches not enough for full Oak intro
+Text progressed to Oak portrait dialog but hasn't concluded
+
+=== HEALTH ===
+No character grid ✓ (4 colors throughout)
+joy_ignore=0 ✓
+keys=[] ✓
+Map unchanged (Red's House 2F) ✓
+No name entry recurrence ✓
+
+=== SCREENSHOTS ===
+evidence/screenshots/red_intro_oak_remaining_text_clear_once_before.png   (frame 5120)
+evidence/screenshots/red_intro_oak_remaining_text_clear_once_batch10.png  (frame 6220)
+evidence/screenshots/red_intro_oak_remaining_text_clear_once_batch12.png  (frame 6440)
+
+=== END ===
