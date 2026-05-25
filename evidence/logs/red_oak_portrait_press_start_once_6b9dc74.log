@@ -1,0 +1,28 @@
+=== red_oak_portrait_press_start_once log ===
+git_head: 6b9dc74
+timestamp: 2026-05-25T20:09:00+08:00
+
+=== OBSERVE initial ===
+GET /state → frame=7180, keys=[], dialog.active=true, text_box_id=1, text="A"
+GET /screenshot → sha256=bbb0ccce, size=1865
+
+=== Batch 1/1 ===
+POST /action ["press_start","wait_90"] → success=true
+GET /state → frame=7290, keys=[], dialog.active=true, text_box_id=1, text="A"
+GET /screenshot → sha256=bbb0ccce (UNCHANGED)
+changed: false
+
+=== Key Test Summary ===
+wait_300:    0/1  batches changed
+press_a:    0/12 batches changed
+press_b:    0/4  batches changed
+press_start: 0/1  batches changed
+--- TOTAL: 0/18 batches produced ANY change ---
+
+=== VERDICT ===
+oak_portrait_progressed_by_press_start: false
+oak_portrait_press_start_no_progress: true
+stop_no_buttons: true
+hard_stop: no
+keys_empty_throughout: true
+gap: 三种输入键（A/B/START）+ wait 全部零变化，怀疑 runtime 或 emulator 输入层存在阻塞

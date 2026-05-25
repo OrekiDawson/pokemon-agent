@@ -1,0 +1,79 @@
+{
+  "task_id": "red_oak_portrait_press_start_once",
+  "target": "测试 press_start 是否能推进全屏 Oak 头像对话卡点",
+  "scope": "只测试当前卡点；不移动、不下楼、不出房间",
+  "max_action_batches": 1,
+  "auto_continue": false,
+  "success_confirmed": false,
+  "gates": {
+    "official_pokemon_agent_gate": {
+      "path": "/home/oreki/pokemon-agent",
+      "git_head": "6b9dc74",
+      "input_api": "GET /state + GET /screenshot + POST /action",
+      "status": "pass_required"
+    },
+    "color_mode_gate": {
+      "runtime_mode": "DMG",
+      "source": "ROM header 0x143=0x00 / API / config",
+      "status": "pass_required"
+    },
+    "model_gate": {
+      "model_name": "deepseek-v4-flash",
+      "source": "config/log",
+      "status": "pass"
+    }
+  },
+  "initial_state": {
+    "game": "Pokemon Red/Blue (USA)",
+    "frame": 7180,
+    "keys": [],
+    "map": "Red's House 2F",
+    "xy": [3, 6],
+    "facing": "up",
+    "dialog_active": true,
+    "text_box_id": 1,
+    "joy_ignore": 0,
+    "text": "A",
+    "text_bytes_hex": "80",
+    "screenshot_sha256": "bbb0ccce4d0056e0e6cd6bba95adf7803d05a7f9f00ab4d287989f9cb0ae4067",
+    "screenshot_file_size": 1865
+  },
+  "batch": {
+    "actions": ["press_start", "wait_90"],
+    "state_after": {
+      "frame": 7290,
+      "keys": [],
+      "dialog_active": true,
+      "text_box_id": 1,
+      "text": "A",
+      "text_bytes_hex": "80"
+    },
+    "screenshot_sha256": "bbb0ccce4d0056e0e6cd6bba95adf7803d05a7f9f00ab4d287989f9cb0ae4067",
+    "changed": false
+  },
+  "verdict": {
+    "success_stop": false,
+    "fail_stop": true,
+    "reason": "oak_portrait_press_start_no_progress — press_start 后截图 sha256 和 state 零变化",
+    "oak_portrait_progressed_by_press_start": false,
+    "oak_portrait_press_start_no_progress": true,
+    "stop_no_buttons": true,
+    "keys_empty_throughout": true,
+    "hard_stop": false
+  },
+  "decision": {
+    "success_confirmed": false,
+    "owner_authorized_continuation_candidate": false,
+    "not_checkpoint_success_by_agent": true,
+    "gap": "oak_portrait_all_keys_inert — wait_300、press_a(×12)、press_b(×4)、press_start(×1) 全部零变化，需做 parser/runtime 定位"
+  },
+  "key_test_summary": {
+    "wait_300": { "changed": false, "batches": 1 },
+    "press_a": { "changed": false, "batches": 12 },
+    "press_b": { "changed": false, "batches": 4 },
+    "press_start": { "changed": false, "batches": 1 },
+    "total_tested_keys": 3,
+    "total_batches": 18,
+    "screenshot_shas_matched": "all identical (bbb0ccce)"
+  }
+}
