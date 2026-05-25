@@ -1,0 +1,52 @@
+=== red_fresh_boot_clean_naming_once log ===
+git_head: d64aecd
+timestamp: 2026-05-25T20:13:00+08:00
+
+=== Strategy ===
+Kill corrupted server → fresh boot → clean naming via press_a defaults only
+No walk_ in character grid. No corrupt name bytes.
+
+=== Batch 1/20 ===
+POST ["press_start","wait_90"] → frame=0→110, map=Pallet Town(0)
+Title screen → intro monologue started. Screenshot: 169→446 bytes.
+
+=== Batch 2/20 ===
+POST ["press_a","wait_90"] → frame=110→220, map=Pallet Town(0)
+Intro monologue continues.
+
+=== Batch 3/20 ===
+POST ["wait_300"] → frame=220→520, map=Pallet Town(0)
+Screenshot changed! Intro is auto-advancing (288e7db8).
+
+=== Batch 4/20 ===
+POST ["press_a","wait_90"] → frame=520→630, map=Pallet Town(0)
+Screenshot: →a5fe4600 (1876 bytes)
+
+=== Batch 5/20 ===
+POST ["press_a","wait_90"] → frame=630→740, map=Pallet Town(0)
+
+=== Batch 6/20 ===
+POST ["press_a","wait_90"] → frame=740→850, map=Pallet Town(0)
+player.name: "NINTEN" ← intro complete!
+
+=== Batch 7/20 ===
+POST ["press_a","wait_90"] → frame=850→960, map=Pallet Town(0)
+rival.name: "SONY" ← naming done! Player name NINTEN, Rival name SONY.
+
+=== Batch 8/20 ===
+POST ["press_a","wait_90"] → frame=960→1070, map=Pallet Town(0)
+Screenshot 2 colors — transition frame.
+
+=== Batch 9/20 ===
+POST ["press_a","wait_90"] → frame=1070→1180, MAP_ID=38!!!
+map="Red's House 2F", xy=[3,6], dialog.active=false
+SUCCESS: Clean naming, bedroom free-move reached!
+
+=== VERDICT ===
+red_house_2f_clean_free_move: true
+player_name_valid_nonempty: NINTEN
+rival_name_valid_nonempty: SONY
+names_clean: true (no × or control bytes)
+keys_empty: true
+hard_stop: no
+has_oaks_parcel: false (normal — hasn't left bedroom yet)

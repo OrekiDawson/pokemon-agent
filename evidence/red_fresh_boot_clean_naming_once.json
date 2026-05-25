@@ -1,0 +1,93 @@
+{
+  "task_id": "red_fresh_boot_clean_naming_once",
+  "target": "从 fresh boot 干净完成 player/rival 命名，避免异常名字字节",
+  "scope": "只完成开场命名；进入 Red's House 2F 可移动即停；不下楼",
+  "max_action_batches": 20,
+  "batches_used": 9,
+  "auto_continue": false,
+  "success_confirmed": false,
+  "gates": {
+    "official_pokemon_agent_gate": {
+      "path": "/home/oreki/pokemon-agent",
+      "git_head": "d64aecd",
+      "input_api": "GET /state + GET /screenshot + POST /action",
+      "status": "pass_required"
+    },
+    "color_mode_gate": {
+      "runtime_mode": "DMG",
+      "source": "ROM header 0x143=0x00 / API / config",
+      "status": "pass_required"
+    },
+    "model_gate": {
+      "model_name": "deepseek-v4-flash",
+      "source": "config/log",
+      "status": "pass"
+    }
+  },
+  "initial_state": {
+    "game": "Pokemon Red/Blue (USA)",
+    "frame": 0,
+    "keys": [],
+    "map": "Pallet Town",
+    "map_id": 0,
+    "xy": [0, 0],
+    "dialog_active": false,
+    "text_box_id": 0,
+    "player_name": "???????????",
+    "rival_name": "???????????",
+    "money": 0
+  },
+  "batches": [
+    {"batch": 1, "actions": ["press_start","wait_90"], "result": "Title→intro monologue started", "frame": 110, "map_id": 0},
+    {"batch": 2, "actions": ["press_a","wait_90"], "result": "Intro monologue", "frame": 220, "map_id": 0},
+    {"batch": 3, "actions": ["wait_300"], "result": "Intro auto-advance", "frame": 520, "map_id": 0, "screenshot_changed": true},
+    {"batch": 4, "actions": ["press_a","wait_90"], "result": "Intro continues", "frame": 630, "map_id": 0},
+    {"batch": 5, "actions": ["press_a","wait_90"], "result": "Intro continues", "frame": 740, "map_id": 0},
+    {"batch": 6, "actions": ["press_a","wait_90"], "result": "player.name=NINTEN! Intro complete", "frame": 850, "map_id": 0},
+    {"batch": 7, "actions": ["press_a","wait_90"], "result": "rival.name=SONY set", "frame": 960, "map_id": 0, "player_name": "NINTEN", "rival_name": "SONY"},
+    {"batch": 8, "actions": ["press_a","wait_90"], "result": "Transition to bedroom", "frame": 1070, "map_id": 0},
+    {"batch": 9, "actions": ["press_a","wait_90"], "result": "SUCCESS: Red's House 2F reached", "frame": 1180, "map_id": 38, "player_name": "NINTEN", "rival_name": "SONY"}
+  ],
+  "final_state": {
+    "frame": 1180,
+    "keys": [],
+    "map_id": 38,
+    "map_name": "Red's House 2F",
+    "xy": [3, 6],
+    "facing": "down",
+    "dialog_active": false,
+    "text_box_id": 0,
+    "joy_ignore": 0,
+    "text": null,
+    "player_name": "NINTEN",
+    "rival_name": "SONY",
+    "money": 3000,
+    "party": [],
+    "has_pokedex": false,
+    "has_oaks_parcel": false,
+    "battle": false,
+    "pixel_analysis": {
+      "unique_colors": 3,
+      "bottom_nonwhite": 0,
+      "center_nonwhite": 533,
+      "no_char_grid": true,
+      "no_textbox": true
+    }
+  },
+  "verdict": {
+    "success_stop": true,
+    "reason": "red_house_2f_clean_free_move — clean naming completed, normal bedroom reached",
+    "red_house_2f_clean_free_move": true,
+    "player_name_valid_nonempty": true,
+    "rival_name_valid_nonempty": true,
+    "names_clean": true,
+    "no_corrupt_bytes": true,
+    "keys_empty": true,
+    "hard_stop": false
+  },
+  "decision": {
+    "success_confirmed": false,
+    "owner_authorized_continuation_candidate": false,
+    "not_checkpoint_success_by_agent": true
+  }
+}
