@@ -1,0 +1,98 @@
+{
+  "task_id": "red_intro_rival_name_one_char_submit_once",
+  "timestamp": "2026-05-25T11:58:38+00:00",
+  "git_head": "aff0443",
+  "model": "deepseek-v4-flash",
+
+  "gates": {
+    "official_pokemon_agent_gate": "pass",
+    "color_mode_gate": "pass",
+    "model_gate": "pass_for_execution_non_final"
+  },
+
+  "initial_state": {
+    "frame": 4300,
+    "map": "Red's House 2F",
+    "map_id": 38,
+    "position": [3, 6],
+    "facing": "down",
+    "keys": [],
+    "player_name": "×??",
+    "rival_name": "",
+    "dialog": { "active": true, "text_box_id": 1, "joy_ignore": 64, "text": null, "text_decode_status": "no_dialog_text" },
+    "screenshot": { "colors": 2, "character_grid": true, "center_band": 1210, "bottom": 600 }
+  },
+
+  "actions": ["press_a", "wait_30", "press_start", "wait_90"],
+  "actions_executed": 4,
+
+  "final_state": {
+    "frame": 4460,
+    "map": "Red's House 2F",
+    "map_id": 38,
+    "position": [3, 6],
+    "facing": "down",
+    "keys": []
+  },
+
+  "key_changes": {
+    "rival_name": {
+      "before": "",
+      "after": "A",
+      "meaning": "press_a selected character 'A' (first char on grid cursor), press_start confirmed"
+    },
+    "joy_ignore": {
+      "before": 64,
+      "after": 0,
+      "meaning": "64=name entry waiting flag, 0=name entry exited"
+    },
+    "dialog": {
+      "before": { "active": true, "joy_ignore": 64, "text": null, "text_decode_status": "no_dialog_text" },
+      "after": { "active": true, "joy_ignore": 0, "text": "A", "text_bytes_hex": "80", "text_decode_status": "ok" }
+    }
+  },
+
+  "screenshot_after": {
+    "colors": 4,
+    "character_grid": false,
+    "center_band": 686,
+    "bottom": 862,
+    "grid_hits": 21,
+    "bottom_textbox_rows": [112, 132, 140],
+    "status": "normal DMG 4-color with bottom text"
+  },
+
+  "success_stop": {
+    "condition_met": true,
+    "conditions_checked": {
+      "joy_ignore_is_0": true,
+      "character_grid_gone": true,
+      "keys_are_empty": true,
+      "rival_name_nonempty": true
+    },
+    "record": {
+      "rival_name_submitted_one_char": true
+    },
+    "stop": true
+  },
+
+  "fail_stop": { "triggered": false },
+  "hard_stop": { "triggered": false },
+
+  "naming_flow_summary": {
+    "player_name": "×?? (from f1 9c 9a characters selected during bedroom exploration)",
+    "rival_name": "A (selected from grid cursor at top-left position)",
+    "flow_resolved": true,
+    "naming_sequence_complete": true,
+    "current_dialog": "confirmation text showing rival name 'A'"
+  },
+
+  "decision": {
+    "success_confirmed": false,
+    "owner_authorized_continuation_candidate": false,
+    "not_checkpoint_success_by_agent": true,
+    "intro_naming_sequence_completed": true,
+    "dialog_remaining": true,
+    "waiting_for_next_user_task": true
+  }
+}

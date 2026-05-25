@@ -1,0 +1,54 @@
+=== red_intro_rival_name_one_char_submit_once ===
+timestamp: 2026-05-25T11:58:38+00:00
+git_head: aff0443
+model: deepseek-v4-flash
+server: http://127.0.0.1:9876
+
+=== OBSERVE (frame 4300) ===
+game: Pokemon Red/Blue (USA)
+map: Red's House 2F (map_id=38)
+position: (3,6) down
+keys: []
+player: "×??"
+rival: ""  ← empty rival name confirmed
+dialog.active: true, text_box_id: 1, joy_ignore: 64
+screenshot: 2 colors, character grid (rival name layout), center=1210, bottom=600
+
+=== ACT ===
+POST /action {"actions":["press_a","wait_30","press_start","wait_90"]}
+success: true, actions_executed: 4
+
+=== VERIFY (frame 4460) ===
+GET /state:
+  keys: []
+  player.name: "×??" (unchanged)
+  rival_name: "A"  ← CHARACTER SELECTED + SUBMITTED
+  joy_ignore: 0  ← NAME ENTRY EXITED
+  dialog.active: true, text_box_id: 1
+  dialog.text: "A" (0x80 = 'A' in Gen1 encoding)
+  text_decode_status: ok
+  map: Red's House 2F (unchanged)
+
+GET /screenshot:
+  colors: 4 (DMG grayscale) ← grid gone
+  character grid: GONE (grid hits: 21 vs ~200)
+  center band: 686 (was 1210)
+  bottom region: 862 (textbox with content)
+
+=== SUCCESS ===
+rival_name_submitted_one_char: true
+- press_a selected 'A' (first character at grid cursor position)
+- press_start confirmed the name
+- joy_ignore 64→0: name entry exited
+- Screen back to normal 4-color DMG
+
+=== NAMING FLOW RESOLVED ===
+Player: ×?? (accidental chars from earlier probes)
+Rival: A (single char from this probe)
+Naming sequence complete.
+
+=== SCREENSHOTS ===
+evidence/screenshots/red_intro_rival_name_one_char_submit_once_before.png  (frame 4300)
+evidence/screenshots/red_intro_rival_name_one_char_submit_once_after.png   (frame 4460)
+
+=== END ===
