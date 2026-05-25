@@ -45,6 +45,18 @@ class SaveRequest(BaseModel):
     name: str
 
 
+class SafeTapRequest(BaseModel):
+    """Body for POST /safe-tap."""
+    press: str  # A|B|START|SELECT
+    dry_run: bool = False
+
+
+class SafeStepRequest(BaseModel):
+    """Body for POST /safe-step."""
+    dir: str  # up|down|left|right
+    dry_run: bool = False
+
+
 # ---------------------------------------------------------------------------
 # Global state
 # ---------------------------------------------------------------------------
@@ -362,6 +374,134 @@ async def screenshot_base64():
         return {"image": b64, "format": "png"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Screenshot error: {e}")
+
+
+_SAFE_TAP_BUTTONS = {"a", "b", "start", "select"}
+_SAFE_STEP_DIRS = {"up", "down", "left", "right"}
+
+
+@app.post("/safe-tap")
+async def safe_tap(req: SafeTapRequest):
+    """Safe button press — press, hold 16f, release, debounce 2f, wait 10f, read state.
+
+    With ``dry_run=true`` returns the planned sequence without executing.
+    Rejects if any keys are currently held.
+    """
+    _ensure_emulator()
+    press = req.press.lower()
+    if press not in _SAFE_TAP_BUTTONS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid press button '{press}'. Valid: {sorted(_SAFE_TAP_BUTTONS)}",
+        )
+
+    # Check held keys
+    held = await _run_sync(_emulator.get_held_keys)
+    if held:
+        raise HTTPException(
+            status_code=409,
+            detail=f"Keys already held before safe-tap: {held}. Rejecting.",
+        )
+
+    # Define the planned sequence
+    sequence = [
+        {"action": "set_keys", "buttons": [press]},
+        {"action": "tick", "frames": 16},
+        {"action": "release_keys"},
+        {"action": "tick", "frames": 2},
+        {"action": "release_keys"},
+        {"action": "tick", "frames": 10},
+        {"action": "read_state"},
+    ]
+
+    if req.dry_run:
+        return {
+            "success": True,
+            "dry_run": True,
+            "press": press,
+            "sequence": sequence,
+        }
+
+    # Execute
+    try:
+        await _run_sync(_emulator.set_keys, [press])
+        await _run_sync(_emulator.tick, 16)
+        await _run_sync(_emulator.release_keys)
+        await _run_sync(_emulator.tick, 2)
+        await _run_sync(_emulator.release_keys)
+        await _run_sync(_emulator.tick, 10)
+        state_after = await _run_sync(_get_state_dict)
+
+        return {
+            "success": True,
+            "press": press,
+            "sequence": sequence,
+            "state_after": state_after,
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"safe-tap error: {e}")
+
+
+@app.post("/safe-step")
+async def safe_step(req: SafeStepRequest):
+    """Safe directional step — set dir, hold 16f, release, debounce 2f, wait 10f, read state.
+
+    With ``dry_run=true`` returns the planned sequence without executing.
+    Rejects if any keys are currently held.
+    """
+    _ensure_emulator()
+    direction = req.dir.lower()
+    if direction not in _SAFE_STEP_DIRS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid direction '{direction}'. Valid: {sorted(_SAFE_STEP_DIRS)}",
+        )
+
+    # Check held keys
+    held = await _run_sync(_emulator.get_held_keys)
+    if held:
+        raise HTTPException(
+            status_code=409,
+            detail=f"Keys already held before safe-step: {held}. Rejecting.",
+        )
+
+    # Define the planned sequence
+    sequence = [
+        {"action": "set_keys", "buttons": [direction]},
+        {"action": "tick", "frames": 16},
+        {"action": "release_keys"},
+        {"action": "tick", "frames": 2},
+        {"action": "release_keys"},
+        {"action": "tick", "frames": 10},
+        {"action": "read_state"},
+    ]
+
+    if req.dry_run:
+        return {
+            "success": True,
+            "dry_run": True,
+            "direction": direction,
+            "sequence": sequence,
+        }
+
+    # Execute
+    try:
+        await _run_sync(_emulator.set_keys, [direction])
+        await _run_sync(_emulator.tick, 16)
+        await _run_sync(_emulator.release_keys)
+        await _run_sync(_emulator.tick, 2)
+        await _run_sync(_emulator.release_keys)
+        await _run_sync(_emulator.tick, 10)
+        state_after = await _run_sync(_get_state_dict)
+
+        return {
+            "success": True,
+            "direction": direction,
+            "sequence": sequence,
+            "state_after": state_after,
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"safe-step error: {e}")
 
 
 @app.post("/action")
