@@ -1,0 +1,28 @@
+=== red_oak_intro_fullscreen_text_clear_once log ===
+git_head: 2520a75
+timestamp: 2026-05-25T20:21:00+08:00
+
+=== OBSERVE ===
+GET /state → frame=1820, dialog.active=true, text_box_id=1, NINTEN/SONY
+screenshot: 2032 bytes, 4 colors, bottom_nonwhite=1376
+
+=== Batches 1-15 (press_a+90) ===
+frame 1930→3470, all dialog.active=true, screenshots changing each batch
+Batch 15: 2 colors → name_entry_screen (character grid)
+
+=== Batches 16-18 (press_a+90) ===
+joy_ignore=64 — name entry character grid mode confirmed
+
+=== Batch 19 (press_start+90) ===
+CRITICAL: press_start exits name entry!
+player_name → AAAAAAA (submitted default A chars)
+joy_ignore: 64→0
+dialog.active: true (YES/NO confirmation)
+
+=== Batch 20 (press_a+90) ===
+frame=4020, dialog.active=true — YES/NO confirmation
+
+=== VERDICT ===
+max_batches=20 exhausted
+dialog still active
+Needs more press_a to clear YES/NO and advance to bedroom free-move

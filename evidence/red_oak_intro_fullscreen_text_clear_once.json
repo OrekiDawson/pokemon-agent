@@ -1,0 +1,93 @@
+{
+  "task_id": "red_oak_intro_fullscreen_text_clear_once",
+  "target": "清完 Oak 开场全屏教学文本，进入 Red's House 2F 正常可移动画面",
+  "scope": "只按文本；不移动、不下楼、不出房间",
+  "max_action_batches": 20,
+  "batches_used": 20,
+  "auto_continue": false,
+  "success_confirmed": false,
+  "gates": {
+    "official_pokemon_agent_gate": {
+      "path": "/home/oreki/pokemon-agent",
+      "git_head": "2520a75",
+      "input_api": "GET /state + GET /screenshot + POST /action",
+      "status": "pass_required"
+    },
+    "color_mode_gate": {
+      "runtime_mode": "DMG",
+      "source": "ROM header 0x143=0x00 / API / config",
+      "status": "pass_required"
+    },
+    "model_gate": {
+      "model_name": "deepseek-v4-flash",
+      "source": "config/log",
+      "status": "pass"
+    }
+  },
+  "initial_state": {
+    "game": "Pokemon Red/Blue (USA)",
+    "frame": 1820,
+    "keys": [],
+    "map": "Red's House 2F",
+    "map_id": 38,
+    "xy": [3, 6],
+    "player_name": "NINTEN",
+    "rival_name": "SONY",
+    "dialog_active": true,
+    "text_box_id": 1,
+    "joy_ignore": 0
+  },
+  "final_state": {
+    "frame": 4020,
+    "keys": [],
+    "map": "Red's House 2F",
+    "map_id": 38,
+    "xy": [3, 6],
+    "player_name": "AAAAAAA",
+    "rival_name": "SONY",
+    "dialog_active": true,
+    "text_box_id": 1,
+    "joy_ignore": 0
+  },
+  "batches": [
+    {"batch": 1, "frame": 1930, "result": "Oak text progressing"},
+    {"batch": 2, "frame": 2040, "result": "Oak text progressing"},
+    {"batch": 3, "frame": 2150, "result": "Oak text progressing"},
+    {"batch": 4, "frame": 2260, "result": "Oak text progressing"},
+    {"batch": 5, "frame": 2370, "result": "Oak text progressing"},
+    {"batch": 6, "frame": 2480, "result": "Oak text progressing"},
+    {"batch": 7, "frame": 2590, "result": "Oak text progressing"},
+    {"batch": 8, "frame": 2700, "result": "Oak text progressing"},
+    {"batch": 9, "frame": 2810, "result": "Oak text progressing"},
+    {"batch": 10, "frame": 2920, "result": "Oak text progressing"},
+    {"batch": 11, "frame": 3030, "result": "Oak text progressing"},
+    {"batch": 12, "frame": 3140, "result": "Oak text progressing"},
+    {"batch": 13, "frame": 3250, "result": "Oak text progressing"},
+    {"batch": 14, "frame": 3360, "result": "Oak text progressing"},
+    {"batch": 15, "frame": 3470, "result": "2色画面出现 (name_entry_screen)"},
+    {"batch": 16, "frame": 3580, "result": "joy_ignore=64 (name_entry mode)"},
+    {"batch": 17, "frame": 3690, "result": "joy_ignore=64"},
+    {"batch": 18, "frame": 3800, "result": "joy_ignore=64, name_entry_screen confirmed"},
+    {"batch": 19, "frame": 3910, "result": "press_start! 字符网格提交, player_name=AAAAAAA, joy_ignore=0", "key": "press_start"},
+    {"batch": 20, "frame": 4020, "result": "dialog progressing (YES/NO confirmation after name)"}
+  ],
+  "key_finding": {
+    "name_screen_reappeared": true,
+    "press_start_exited_name_screen": true,
+    "player_name_mutated": "NINTEN→AAAAAAA",
+    "dialog_still_active": true,
+    "likely_current_state": "YES/NO confirmation for name AAAAAAA"
+  },
+  "verdict": {
+    "success_stop": false,
+    "fail_stop": true,
+    "reason": "max_action_batches (20) 用完, dialog 仍在 YES/NO 确认阶段",
+    "oak_intro_text_cleared": false,
+    "red_house_2f_free_move": false
+  },
+  "decision": {
+    "success_confirmed": false,
+    "owner_authorized_continuation_candidate": false,
+    "not_checkpoint_success_by_agent": true
+  }
+}
