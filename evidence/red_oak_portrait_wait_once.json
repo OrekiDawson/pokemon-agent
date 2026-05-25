@@ -1,0 +1,70 @@
+{
+  "task_id": "red_oak_portrait_wait_once",
+  "timestamp": "2026-05-25T12:05:22+00:00",
+  "git_head": "cb6117b",
+  "model": "deepseek-v4-flash",
+
+  "gates": {
+    "official_pokemon_agent_gate": "pass",
+    "color_mode_gate": "pass",
+    "model_gate": "pass_for_execution_non_final"
+  },
+
+  "initial_state": {
+    "frame": 6440,
+    "map": "Red's House 2F",
+    "map_id": 38,
+    "position": [3, 6],
+    "facing": "up",
+    "keys": [],
+    "dialog": { "active": true, "text_box_id": 1, "joy_ignore": 0, "text": "A", "text_decode_status": "ok" },
+    "screenshot_sha256": "bbb0ccce4d0056e0e6cd6bba95adf7803d05a7f9f00ab4d287989f9cb0ae4067",
+    "screenshot_size": 1865,
+    "colors": 4,
+    "center_band": 4064,
+    "bottom": 5120
+  },
+
+  "actions": ["wait_300"],
+  "actions_executed": 1,
+
+  "final_state": {
+    "frame": 6740,
+    "dialog": { "active": true, "text_box_id": 1, "joy_ignore": 0, "text": "A", "text_decode_status": "ok" },
+    "screenshot_sha256": "bbb0ccce4d0056e0e6cd6bba95adf7803d05a7f9f00ab4d287989f9cb0ae4067",
+    "screenshot_size": 1865,
+    "colors": 4,
+    "center_band": 4064,
+    "bottom": 5120
+  },
+
+  "comparison": {
+    "sha256_match": true,
+    "size_match": true,
+    "center_band_match": true,
+    "bottom_match": true,
+    "state_match": true,
+    "identically_unchanged": true
+  },
+
+  "fail_stop": {
+    "condition_met": true,
+    "condition": "wait_300 produced no change — screenshot SHA256 identical, all state fields identical",
+    "record": {
+      "oak_portrait_wait_no_progress": true,
+      "clarification": "Oak portrait dialog does NOT auto-advance. Game is waiting for button input (press A). Needs more A presses beyond 12 to complete full Oak intro."
+    },
+    "stop_no_buttons": true
+  },
+
+  "hard_stop": { "triggered": false },
+
+  "decision": {
+    "success_confirmed": false,
+    "owner_authorized_continuation_candidate": false,
+    "not_checkpoint_success_by_agent": true,
+    "dialog_remaining": true,
+    "auto_progress": false,
+    "requires_more_button_input": true
+  }
+}

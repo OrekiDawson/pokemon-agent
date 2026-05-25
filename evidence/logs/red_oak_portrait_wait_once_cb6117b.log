@@ -1,0 +1,46 @@
+=== red_oak_portrait_wait_once ===
+timestamp: 2026-05-25T12:05:22+00:00
+git_head: cb6117b
+model: deepseek-v4-flash
+server: http://127.0.0.1:9876
+
+=== OBSERVE (frame 6440) ===
+game: Pokemon Red/Blue (USA)
+map: Red's House 2F (map_id=38), (3,6) up
+keys: [], joy_ignore: 0
+dialog.active: true, text_box_id: 1, text: "A" (0x80)
+screenshot: Oak full portrait, 1865 bytes, sha=bbb0ccce...4067
+4 colors, center=4064, bottom=5120
+
+=== ACT ===
+POST /action {"actions":["wait_300"]}
+success: true, actions_executed: 1
+frame: 6440 → 6740 (+300)
+
+=== VERIFY ===
+State: identical to before
+Screenshot SHA256: bbb0ccce4d0056e0e6cd6bba95adf7803d05a7f9f00ab4d287989f9cb0ae4067
+  → EXACT MATCH with before
+Size: 1865 bytes (same)
+Colors: 4 (same)
+Center/Bottom: 4064/5120 (same)
+All state fields: identical
+
+=== CONCLUSION ===
+Oak portrait dialog does NOT auto-advance.
+The game is waiting for button input (press A).
+More A presses are needed to get through full Oak intro.
+Batch 10-12 stalling was because text had advanced to last text block.
+Wait 300f = no change. Need more A presses.
+
+=== STOP ===
+oak_portrait_wait_no_progress: true
+auto_progress: false
+requires_more_button_input: true
+stop_no_buttons: true
+
+=== SCREENSHOTS ===
+evidence/screenshots/red_oak_portrait_wait_once_before.png (frame 6440)
+evidence/screenshots/red_oak_portrait_wait_once_after.png  (frame 6740)
+
+=== END ===
