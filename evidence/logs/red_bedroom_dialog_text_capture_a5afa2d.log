@@ -1,0 +1,50 @@
+=== red_bedroom_dialog_text_capture ===
+Timestamp: 2026-05-25T10:57:30+00:00
+Git HEAD: a5afa2d04639eafacdc25701169fdf338001f056
+ROM: /home/oreki/xiaoyou_red/roms/PokemonRed.gb
+
+=== GATES ===
+official_pokemon_agent_gate: pass (package=/home/oreki/pokemon-agent, HEAD=a5afa2d, health=pass, backend=PyBoyEmulator GB, input=POST /action only)
+color_mode_gate: pass (ROM header 0x143=0x00, DMG mode)
+model_gate: pass (deepseek-v4-flash)
+
+=== ACTION LOG ===
+Batch 1: press_start, wait_60 -> frame=null (blank boot)
+Batch 2: wait_120, wait_60 -> frame=260 (boot animation)
+Batch 3: press_a, wait_60 -> frame=340 (title screen)
+Batch 4: press_start, wait_60 -> frame=420, player.name="???????????", Pallet Town (0,0)
+Batch 5: press_a, wait_60 -> frame=500, still title/Pallet (0,0)
+Batch 6: press_a, wait_60, press_a, wait_30 -> frame=630, player.name="NINTEN" (named through Oak intro!)
+Batch 7: press_a, wait_60, press_a, wait_60 -> frame=790, screen blanking
+Batch 8: press_a, wait_60, press_a, wait_60, press_a, wait_60 -> frame=1030, MAP 38 (Red's House 2F)!
+
+=== RUNTIME STATE (final) ===
+map: Red's House 2F (map_id=38)
+player: (3,6) facing down
+dialog.active: true
+text_box_id: 1
+dialog.text: null (parser_address_gap — wStringBuffer is for name entry only)
+player.name: NINTEN
+rival_name: SONY
+money: 3000
+keys: []
+frame_count: 1030
+
+=== SCREENSHOT ANALYSIS ===
+Mode: RGBA, Size: 160x144
+Colors: 21184 white, 1574 black, 202 dark gray, 80 light gray
+Bottom third (y=96-144, dialog box area): 6493 white + 1187 black pixels
+Text box border confirmed present in bottom region
+Vision model reports dialog text box with visible characters "Hello the" (may be hallucinated, but dialog box presence is confirmed by pixel data)
+Player sprite visible in top region
+
+=== GAPS ===
+dialog_text_gap: true — text=null despite text_box_id=1
+parser_address_gap: true — Gen1 scripted dialog reads from ROM (bank-switched text engine), not from wStringBuffer (0xCF4B, used only for name entry)
+bedroom_navigable_gap: true — dialog active, cannot move until cleared
+parser_gap: true — read_dialog cannot read scripted Gen1 dialog text
+
+=== DECISION ===
+stop_no_buttons: true
+not_checkpoint_success_by_agent: true
+owner_authorized_continuation_candidate: false

@@ -1,0 +1,102 @@
+{
+  "_meta": {
+    "probe": "red_bedroom_dialog_text_capture",
+    "timestamp": "2026-05-25T10:57:30+00:00",
+    "git_head": "a5afa2d04639eafacdc25701169fdf338001f056",
+    "rom": "/home/oreki/xiaoyou_red/roms/PokemonRed.gb",
+    "rom_title": "POKEMON RED",
+    "rom_header_cgb": 0
+  },
+  "gates": {
+    "official_pokemon_agent_gate": {
+      "status": "pass",
+      "package_or_repo": "/home/oreki/pokemon-agent",
+      "git_head": "a5afa2d04639eafacdc25701169fdf338001f056",
+      "api_base": "http://127.0.0.1:9876",
+      "health_status": "pass",
+      "runtime_backend": "PyBoyEmulator (GB)",
+      "state_parser": "PokemonRedReader",
+      "input_api": "POST /action (press_X, walk_X, hold_X_N, wait_N) only",
+      "notes": "Endpoint count verified: GET /state + GET /screenshot + POST /action only"
+    },
+    "color_mode_gate": {
+      "status": "pass",
+      "mode": "DMG",
+      "source": "ROM header 0x143 = 0x00"
+    },
+    "model_gate": {
+      "status": "pass",
+      "model_name": "deepseek-v4-flash",
+      "source": "config.yaml + runtime session"
+    }
+  },
+  "runtime": {
+    "api_base": "http://127.0.0.1:9876",
+    "git_head": "a5afa2d04639eafacdc25701169fdf338001f056",
+    "frame_count": 1030,
+    "map": "Red's House 2F",
+    "map_id": 38,
+    "xy": [3, 6],
+    "facing": "down",
+    "keys": [],
+    "dialog": {
+      "active": true,
+      "text_box_id": 1,
+      "joy_ignore": 0,
+      "text": null,
+      "text_addr": 53067,
+      "text_bytes_hex": null,
+      "text_decode_status": "no_dialog_text"
+    },
+    "player": {
+      "name": "NINTEN",
+      "rival_name": "SONY",
+      "money": 3000,
+      "position": {"y": 6, "x": 3},
+      "facing": "down",
+      "play_time": "0:00:00"
+    },
+    "battle": false,
+    "menu": null
+  },
+  "vision": {
+    "screenshot_path": "evidence/screenshots/red_bedroom_dialog_text_capture_1030.png",
+    "screenshot_size_bytes": 1591,
+    "screenshot_pixel_mode": "RGBA",
+    "screenshot_colors": [
+      {"count": 21184, "rgba": "(255,255,255,255)"},
+      {"count": 1574, "rgba": "(0,0,0,255)"},
+      {"count": 202, "rgba": "(85,85,85,255)"},
+      {"count": 80, "rgba": "(153,153,153,255)"}
+    ],
+    "text_box_visible": true,
+    "text_box_region_y": "96-144",
+    "text_box_nonwhite_pixels": 1187,
+    "player_visible": true,
+    "room_or_screen_summary": "Bedroom (Red's House 2F), dialog box visible at bottom, 4-shade DMG grayscale rendering, player sprite visible at position"
+  },
+  "last_actions": [
+    {"batch": 1, "actions": ["press_start", "wait_60"], "frame_after": null},
+    {"batch": 2, "actions": ["wait_120", "wait_60"], "frame_after": 260},
+    {"batch": 3, "actions": ["press_a", "wait_60"], "frame_after": 340},
+    {"batch": 4, "actions": ["press_start", "wait_60"], "frame_after": 420},
+    {"batch": 5, "actions": ["press_a", "wait_60"], "frame_after": 500},
+    {"batch": 6, "actions": ["press_a", "wait_60", "press_a", "wait_30"], "frame_after": 630},
+    {"batch": 7, "actions": ["press_a", "wait_60", "press_a", "wait_60"], "frame_after": 790},
+    {"batch": 8, "actions": ["press_a", "wait_60", "press_a", "wait_60", "press_a", "wait_60"], "frame_after": 1030}
+  ],
+  "success_confirmed": false,
+  "gap": {
+    "bedroom_navigable_gap": true,
+    "parser_gap": true,
+    "dialog_text_gap": true,
+    "parser_address_gap": true,
+    "gap_details": {
+      "dialog_text_gap": "text=null but text_box_id=1 — wStringBuffer (0xCF4B) stores name entry text only, not scripted Gen1 dialog text",
+      "parser_address_gap": "Gen1 scripted dialog reads text from ROM via text engine, not from a static RAM buffer. wStringBuffer is only for name entry (Oak intro naming screen). Actual dialog text source is ROM-based and requires reading the current script pointer + ROM bank."
+    }
+  },
+  "stop_or_go": "stop_no_buttons",
+  "owner_authorized_continuation_candidate": false,
+  "not_checkpoint_success_by_agent": true
+}
