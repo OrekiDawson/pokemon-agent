@@ -1,0 +1,69 @@
+=== red_post_name_entry_textbox_clear_once ===
+timestamp: 2026-05-25T11:50:40+00:00
+git_head: 5e79fba
+model: deepseek-v4-flash
+server: http://127.0.0.1:9876
+
+=== SIDE EFFECT ===
+name_mutated_nonblocking: true
+player_name: NINTEN → ×?? (3 chars f1 9c 9a)
+Not rolled back. Does not block Red mainline.
+
+=== GATES ===
+official_pokemon_agent_gate: pass
+color_mode_gate: pass (DMG)
+model_gate: pass_for_execution_non_final
+
+=== INITIAL OBSERVE (frame 3310) ===
+game: Pokemon Red/Blue (USA)
+map: Red's House 2F (map_id=38)
+position: (3,6) down
+keys: []
+joy_ignore: 0  ← name entry exited
+player: ×?? / SONY
+dialog.active: true, text_box_id: 1
+text: "×<9C><9A>" (f1 9c 9a)
+screenshot: 4 colors, character grid GONE, bottom textbox visible (830px)
+
+=== BATCHES 1-8 ===
+All batches: press_a + wait_90
+
+batch 1 (frame 3420): dialog still active, joy_ignore=0, text unchanged
+batch 2 (frame 3530): same
+batch 3 (frame 3640): same
+batch 4 (frame 3750): same
+batch 5 (frame 3860): same, but bottom non-white 830→916 (text may have scrolled)
+batch 6 (frame 3970): same
+batch 7 (frame 4080): same
+batch 8 (frame 4190): *** JOY_IGNORE BACK TO 64 ***
+                        text → null, text_decode_status → no_dialog_text
+                        screenshot: 2 COLORS, CHARACTER GRID RESTORED
+                        center=1210, bottom=600 (IDENTICAL to initial name entry)
+
+=== HARD_STOP ===
+triggered: true
+conditions met:
+  - joy_ignore returned to 64 ✓
+  - 2-color character grid reappeared ✓
+  - center band (1210) and bottom (600) match initial name entry precisely
+
+=== FLOW HYPOTHESIS ===
+The game is in a name entry loop. The initial dialog was a rename prompt.
+After press_start confirmed "×??", the game showed a confirmation text,
+then after 8×A through that text, returned to the name entry screen for
+further renaming. This is consistent with Gen1 name raters / rename flows
+where the game repeatedly offers name changes.
+
+=== SUMMARY ===
+8 batches attempted.
+Not a simple textbox to clear — it's a name entry loop.
+post_name_entry_textbox_persistent_gap: false (it's a loop, not a gap)
+name_entry_loop: true
+hard_stop_reached: true
+
+=== SCREENSHOTS ===
+evidence/screenshots/red_post_name_entry_textbox_clear_once_before.png  (frame 3310, 4-color, no grid)
+evidence/screenshots/red_post_name_entry_textbox_clear_once_batch5.png  (frame 3860, 4-color, bottom text)
+evidence/screenshots/red_post_name_entry_textbox_clear_once_batch8.png  (frame 4190, 2-color, grid back)
+
+=== END ===
