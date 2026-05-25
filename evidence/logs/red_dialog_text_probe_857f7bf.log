@@ -1,0 +1,31 @@
+red_dialog_text_probe
+2026-05-25T18:30:42+08:00
+857f7bf9fada55cb6d8f8dd48a5930bfa23df88a
+ M pokemon_agent/memory/red.py
+?? evidence/logs/red_dialog_text_probe_857f7bf.log
+?? evidence/screenshots/red_bedroom_gap_final_230cc3d.png
+?? evidence/screenshots/red_dialog_text_probe_857f7bf.png
+?? evidence/screenshots/red_pallet_text_230cc3d.png
+
+=== Compile ===
+Listing 'pokemon_agent'...
+Listing 'pokemon_agent/dashboard'...
+Listing 'pokemon_agent/dashboard/static'...
+Listing 'pokemon_agent/memory'...
+Listing 'pokemon_agent/state'...
+
+=== Safe-endpoint scan ===
+(none)
+
+=== Dialog text fields scan ===
+
+=== Read-only probe result ===
+mode: fresh boot (no dialog active)
+dialog.active: false
+text_box_id: 0
+dialog.text: null
+dialog.text_decode_status: no_dialog_text
+keys: []
+map: Pallet Town
+xy: (0,0)
+live_input_sent: false

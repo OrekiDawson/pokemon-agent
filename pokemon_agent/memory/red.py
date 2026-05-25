@@ -62,6 +62,8 @@ ADDR_ENEMY_DATA    = 0xD8A4   # 44 bytes per mon
 ADDR_TEXT_BOX_ID   = 0xD125   # wTextBoxID
 ADDR_JOY_IGNORE    = 0xD730   # bit 5 = joypad disabled (in dialogue)
 ADDR_TEXT_PROGRESS  = 0xC4F2  # approximate; nonzero when text printing
+ADDR_STRING_BUFFER  = 0xCF4B  # wStringBuffer — decoded text ready for display (96+ bytes)
+MAX_TEXT_LEN        = 96
 
 # -- Pokedex --
 ADDR_DEX_OWNED     = 0xD2F7   # 19 bytes (152 bits, only 151 used)
@@ -691,6 +693,11 @@ class RedBlueMemoryReader(GameMemoryReader):
         NPC dialog, etc.).  wTextBoxID is unreliable because it can
         retain stale non-zero values after dialog ends (e.g. after
         Oak's intro sequence).
+
+        Also reads wStringBuffer (0xCF4B) to capture the text currently
+        displayed or being typed into the dialogue box.  The raw bytes
+        and a decoded string are returned as ``text_bytes_hex`` and
+        ``text``.
         """
         text_box = self.emu.read_u8(ADDR_TEXT_BOX_ID)
         joy_ignore = self.emu.read_u8(ADDR_JOY_IGNORE)
@@ -698,10 +705,56 @@ class RedBlueMemoryReader(GameMemoryReader):
         # bit 5 is set.  wJoyIgnore bit 7 is the "text box open" flag
         # that the game engine checks to block movement.
         in_dialog = bool(text_box != 0) or bool(joy_ignore & 0x20)
+
+        # Read wStringBuffer — the decoded text ready for display
+        try:
+            raw = self.emu.read_range(ADDR_STRING_BUFFER, MAX_TEXT_LEN)
+            # Find the 0x50 terminator
+            term_idx = raw.find(b"\x50")
+            effective_len = term_idx if term_idx >= 0 else len(raw)
+            text_bytes = raw[:effective_len]
+
+            # If first byte is 0x00 or 0x50, the buffer is empty
+            if effective_len == 0 or text_bytes[0] == 0x00:
+                decoded_text = None
+                text_bytes_hex = None
+                decode_status = "no_dialog_text"
+            else:
+                text_bytes_hex = text_bytes.hex(" ", 1)
+                # Decode using the Gen1 encoding table
+                decoded_chars = []
+                has_unknown = False
+                for byte_val in text_bytes:
+                    ch = GEN1_ENCODING.get(byte_val)
+                    if ch is not None and ch.strip():
+                        decoded_chars.append(ch)
+                    elif ch == "":
+                        continue  # terminator char in map
+                    else:
+                        decoded_chars.append(f"<{byte_val:02X}>")
+                        has_unknown = True
+
+                decoded_text = "".join(decoded_chars)
+
+                if not decoded_text:
+                    decode_status = "decoded_with_unknown_bytes"
+                elif has_unknown:
+                    decode_status = "decoded_with_unknown_bytes"
+                else:
+                    decode_status = "ok"
+        except Exception:
+            decoded_text = None
+            text_bytes_hex = None
+            decode_status = "read_failed"
+
         return {
             "active": in_dialog,
             "text_box_id": text_box,
             "joy_ignore": joy_ignore,
+            "text": decoded_text,
+            "text_addr": ADDR_STRING_BUFFER,
+            "text_bytes_hex": text_bytes_hex,
+            "text_decode_status": decode_status,
         }
 
     def read_map_info(self) -> Dict[str, Any]:
