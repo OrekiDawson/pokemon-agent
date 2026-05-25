@@ -64,6 +64,8 @@ ADDR_JOY_IGNORE    = 0xD730   # bit 5 = joypad disabled (in dialogue)
 ADDR_TEXT_PROGRESS  = 0xC4F2  # approximate; nonzero when text printing
 ADDR_STRING_BUFFER  = 0xCF4B  # wStringBuffer — decoded text ready for display (96+ bytes)
 MAX_TEXT_LEN        = 96
+ADDR_OAKS_LAB_CUR_SCRIPT = 0xD5F0  # wOaksLabCurScript
+OAKS_LAB_NOOP_SCRIPT = 0x12
 
 # -- Pokedex --
 ADDR_DEX_OWNED     = 0xD2F7   # 19 bytes (152 bits, only 151 used)
@@ -575,6 +577,7 @@ class RedBlueMemoryReader(GameMemoryReader):
                 })
 
         return {
+            "raw_species_id": species_id,
             "species_id": species_id,
             "species": species_name,
             "nickname": nickname,
@@ -706,10 +709,23 @@ class RedBlueMemoryReader(GameMemoryReader):
         """
         text_box = self.emu.read_u8(ADDR_TEXT_BOX_ID)
         joy_ignore = self.emu.read_u8(ADDR_JOY_IGNORE)
-        # Any dialog is active if wTextBoxID is non-zero OR wJoyIgnore
-        # bit 5 is set.  wJoyIgnore bit 7 is the "text box open" flag
-        # that the game engine checks to block movement.
-        in_dialog = bool(text_box != 0) or bool(joy_ignore & 0x20)
+        map_id = self.emu.read_u8(ADDR_MAP_ID)
+        oaks_lab_script = (
+            self.emu.read_u8(ADDR_OAKS_LAB_CUR_SCRIPT)
+            if map_id == 40
+            else None
+        )
+
+        # wTextBoxID and wStringBuffer can retain the last text ("POKé BALL"
+        # in Oak's Lab) after the script has ended.  wJoyIgnore is the live
+        # input block, and Oak's Lab script 0x12 is the no-op/free-control
+        # state reached after the post-Pokedex cutscene.
+        stale_oaks_lab_text = (
+            map_id == 40
+            and oaks_lab_script == OAKS_LAB_NOOP_SCRIPT
+            and joy_ignore == 0
+        )
+        in_dialog = (bool(text_box != 0) or bool(joy_ignore & 0x20)) and not stale_oaks_lab_text
 
         # Read wStringBuffer — the decoded text ready for display
         try:
@@ -756,6 +772,7 @@ class RedBlueMemoryReader(GameMemoryReader):
             "active": in_dialog,
             "text_box_id": text_box,
             "joy_ignore": joy_ignore,
+            "oaks_lab_script": oaks_lab_script,
             "text": decoded_text,
             "text_addr": ADDR_STRING_BUFFER,
             "text_bytes_hex": text_bytes_hex,
