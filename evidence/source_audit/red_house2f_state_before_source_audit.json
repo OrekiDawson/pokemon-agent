@@ -1,0 +1,43 @@
+{
+    "metadata": {
+        "game": "Pokemon Red/Blue (USA)",
+        "timestamp": "2026-05-25T01:50:37.603246+00:00",
+        "frame_count": null
+    },
+    "player": {
+        "name": "ASH",
+        "rival_name": "BLUE",
+        "money": 3000,
+        "badges": [],
+        "badge_count": 0,
+        "position": {
+            "y": 4,
+            "x": 2
+        },
+        "facing": "down",
+        "play_time": "0:00:03"
+    },
+    "party": [],
+    "bag": [],
+    "battle": {
+        "in_battle": false,
+        "type": "none"
+    },
+    "dialog": {
+        "active": false,
+        "text_box_id": 1,
+        "joy_ignore": 0
+    },
+    "map": {
+        "map_id": 38,
+        "map_name": "Red's House 2F"
+    },
+    "flags": {
+        "has_pokedex": false,
+        "has_oaks_parcel": false,
+        "pokedex_owned": 0,
+        "pokedex_seen": 0,
+        "badges": [],
+        "badge_count": 0
+    }
+}

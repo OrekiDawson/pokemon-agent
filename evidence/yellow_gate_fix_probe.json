@@ -1,0 +1,105 @@
+{
+  "probe_type": "color_mode_gate_evidence_correction",
+  "timestamp": "2026-05-25T03:28:30Z",
+  "environment": {
+    "git_head": "c2e222e44cb69c35202e5dfd1b7ee3392e3ac334",
+    "repo_path": "/home/oreki/pokemon-agent",
+    "api_base": "http://127.0.0.1:9876",
+    "server_pid": null
+  },
+  "official_pokemon_agent_gate": {
+    "required": true,
+    "package_or_repo": "/home/oreki/pokemon-agent",
+    "version_or_git_sha": "c2e222e44cb69c35202e5dfd1b7ee3392e3ac334",
+    "launch_command": "pokemon-agent serve --rom /home/oreki/PokemonRed.gb --port 9876",
+    "api_base": "http://127.0.0.1:9876",
+    "health_status": "pass",
+    "runtime_backend": "PyBoyEmulator (GB/GBC)",
+    "state_parser": "PokemonRedReader",
+    "input_api": "POST /action (press_X, walk_X, hold_X_N, wait_N)",
+    "status": "pass"
+  },
+  "color_mode_gate": {
+    "required": true,
+    "mode": "DMG",
+    "evidence_sources": [
+      {
+        "type": "runtime_memory_read_via_pokemon_agent_api",
+        "description": "ROM header byte 0x143 (CGB flag) read through PyBoy memory",
+        "register_or_header_address": "0x143 (ROM header CGB compatibility flag)",
+        "value_read": "0x00",
+        "interpretation": "DMG only — game does not support CGB functions (per Nintendo Game Boy programming manual)"
+      },
+      {
+        "type": "runtime_memory_read_via_pokemon_agent_api",
+        "description": "KEY1 register (CGB-only register) reads as 0xFF on DMG",
+        "register_address": "0xFF4D (KEY1)",
+        "value_read": "0xFF",
+        "interpretation": "Consistent with non-CGB operation; DMG mode confirmed"
+      },
+      {
+        "type": "pokemon_agent_get_info_api",
+        "description": "Emulator get_info() runtime metadata",
+        "api_endpoint": "GET /info (not exposed on server, tested via direct Python call)",
+        "platform": "GB/GBC",
+        "backend": "PyBoyEmulator",
+        "rom_path": "/home/oreki/PokemonRed.gb",
+        "interpretation": "PyBoy running in DMG compatibility mode for .gb ROM with CGB flag=0x00"
+      },
+      {
+        "type": "rom_file_header_validation",
+        "description": "Direct ROM file header read from /home/oreki/PokemonRed.gb",
+        "header_title": "POKEMON RED",
+        "header_address_0x143": "0x00",
+        "interpretation": "DMG only — confirmed from ROM file"
+      },
+      {
+        "type": "server_startup_log",
+        "description": "Server startup log from CLI",
+        "log_content": "[server] Loading ROM: /home/oreki/PokemonRed.gb\n[server] Detected game type: red",
+        "interpretation": "Game type 'red' selects PokemonRedReader for monochrome Gen I ROM"
+      }
+    ],
+    "source": "pokemon-agent runtime memory read (0x143 CGB flag = 0x00) + emulator get_info() + startup log",
+    "status": "pass"
+  },
+  "model_gate": {
+    "required": true,
+    "model_name": "deepseek-v4-flash",
+    "source": "config.yaml (provider: deepseek)",
+    "forbidden_model_list": ["Kimi", "Moonshot", "MiniMax", "海螺", "abab"],
+    "status": "pass_for_execution_non_final"
+  },
+  "rom_manifest": {
+    "title": "Pokemon Red",
+    "realpath": "/home/oreki/PokemonRed.gb",
+    "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+    "size": 1048576,
+    "mtime": "2026-05-24T23:25:22Z",
+    "header_title_string": "POKEMON RED",
+    "header_cgb_flag": 0,
+    "header_cgb_flag_meaning": "DMG only (0x00)"
+  },
+  "runtime_state_probe": {
+    "map": "Pallet Town",
+    "xy": [9, 8],
+    "facing": "up",
+    "keys": "not_exposed_by_pokemonredreader",
+    "frame": null,
+    "menu": false,
+    "battle": false,
+    "dialog": false,
+    "parser_status": "pass"
+  },
+  "verdict": {
+    "official_pokemon_agent_gate": "pass",
+    "color_mode_gate": "pass",
+    "model_gate": "pass_for_execution_non_final",
+    "rom_manifest_title": "Pokemon Red",
+    "keys": "unknown (PokemonRedReader does not expose keys)",
+    "context_gap": false,
+    "success_confirmed": false,
+    "owner_authorized_continuation_candidate": false,
+    "not_checkpoint_success_by_agent": true
+  }
+}

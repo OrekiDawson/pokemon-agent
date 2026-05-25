@@ -1,0 +1,23 @@
+# Red's House 2F → 1F → Pallet Town
+# CP01 Navigation Summary
+
+## Warp Discovery
+Source coordinate (pret/pokered): warp_event 7, 1, REDS_HOUSE_1F, 3
+Actual runtime coordinate: (7, 1) - CONFIRMED WORKING
+
+## Route
+Start: (2,4) Red's House 2F
+  walk_up → (2,3)
+  walk_up → (2,2)
+  walk_right → (3,2)
+  walk_up → (3,1)
+  walk_right × 3 → (6,1)
+  walk_right → (7,1) → WARP to Red's House 1F
+
+Position: (7,1) Red's House 1F
+  walk_down × 6 → (7,7)
+  walk_left × 3 → (4,7)
+  walk_left × 2 → (2,7)
+  walk_down → (5,6) Pallet Town
+
+CP01: COMPLETE

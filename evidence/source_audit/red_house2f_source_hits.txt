@@ -1,0 +1,19 @@
+data/maps/map_header_banks.asm:42:	db BANK(RedsHouse2F_h)
+data/maps/songs.asm:41:	db MUSIC_PALLET_TOWN, BANK(Music_PalletTown) ; REDS_HOUSE_2F
+data/maps/map_header_pointers.asm:42:	dw RedsHouse2F_h
+data/maps/headers/RedsHouse2F.asm:1:	map_header RedsHouse2F, REDS_HOUSE_2F, REDS_HOUSE_2, $00
+data/maps/objects/RedsHouse1F.asm:10:	warp_event  7,  1, REDS_HOUSE_2F, 1
+data/maps/objects/RedsHouse2F.asm:1:RedsHouse2F_Object:
+data/maps/objects/RedsHouse2F.asm:11:	def_warps_to REDS_HOUSE_2F
+data/maps/special_warps.asm:48:	special_warp_spec REDS_HOUSE_2F, 3, 6, REDS_HOUSE_2
+scripts/RedsHouse2F.asm:1:RedsHouse2F_Script:
+scripts/RedsHouse2F.asm:3:	ld hl, RedsHouse2F_ScriptPointers
+scripts/RedsHouse2F.asm:4:	ld a, [wRedsHouse2FCurScript]
+scripts/RedsHouse2F.asm:7:RedsHouse2F_ScriptPointers:
+scripts/RedsHouse2F.asm:9:	dw_const RedsHouse2FDefaultScript, SCRIPT_REDSHOUSE2F_DEFAULT
+scripts/RedsHouse2F.asm:10:	dw_const RedsHouse2FNoopScript,    SCRIPT_REDSHOUSE2F_NOOP
+scripts/RedsHouse2F.asm:12:RedsHouse2FDefaultScript:
+scripts/RedsHouse2F.asm:18:	ld [wRedsHouse2FCurScript], a
+scripts/RedsHouse2F.asm:21:RedsHouse2FNoopScript:
+scripts/RedsHouse2F.asm:24:RedsHouse2F_TextPointers:
+constants/map_constants.asm:70:	map_const REDS_HOUSE_2F,                  4,  4 ; $26

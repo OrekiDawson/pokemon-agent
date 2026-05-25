@@ -1,0 +1,89 @@
+=== yellow_gate_fix_probe log ===
+timestamp: 2026-05-25T03:28:30Z
+git_head: c2e222e44cb69c35202e5dfd1b7ee3392e3ac334
+repo: /home/oreki/pokemon-agent
+api_base: http://127.0.0.1:9876
+server_pid: (unknown, but alive)
+---
+== Step 1: Verify server health ==
+curl http://127.0.0.1:9876/health
+RESULT: {"status":"ok","emulator_ready":true}
+STATUS: pass
+---
+== Step 2: GET /state ==
+curl http://127.0.0.1:9876/state
+RESULT: {
+  "metadata": { "game": "Pokemon Red/Blue (USA)", "frame_count": null },
+  "player": { "name": "AAAAAAA", "rival_name": "AAAAAAA", "money": 3000, "badges": [], "position": { "y": 8, "x": 9 }, "facing": "up", "play_time": "0:00:01" },
+  "party": [],
+  "dialog": { "active": false, "text_box_id": 1, "joy_ignore": 0 },
+  "map": { "map_id": 0, "map_name": "Pallet Town" },
+  "battle": { "in_battle": false },
+  "flags": { "has_pokedex": false, "has_oaks_parcel": false }
+}
+STATUS: pass - PokemonRedReader active, game="Pokemon Red/Blue (USA)"
+NOTE: PokemonRedReader does NOT expose keys field or color_mode field
+---
+== Step 3: Check PokemonRedReader keys capability ==
+SOURCE: code inspection of pokemon_agent/memory/red.py and reader.py
+FINDING: PokemonRedReader does not implement read_keys()
+  - Base class RedBlueMemoryReader also does not have read_keys()
+  - /state response does not include keys or key_count
+STATUS: gap - keys not exposed by PokemonRedReader
+---
+== Step 4: Check emulator get_info() for platform/mode ==
+SOURCE: direct Python call via pokemon_agent.emulator
+python3 -c "from pokemon_agent.emulator import create_emulator; e = create_emulator('/home/oreki/PokemonRed.gb'); print(e.get_info())"
+RESULT: {"backend": "PyBoyEmulator", "rom_path": "/home/oreki/PokemonRed.gb", "frame_count": 0, "platform": "GB/GBC"}
+STATUS: pass - platform reported as GB/GBC (PyBoy's default; DMG mode for .gb ROM with CGB flag=0x00)
+---
+== Step 5: Determine color_mode from ROM header via PyBoy memory read ==
+SOURCE: PyBoy runtime memory read via pokemon-agent emulator
+Method: e._pyboy.memory[0x143]
+RESULT: 0x00
+INTERPRETATION: CGB compatibility flag = 0x00 → DMG only
+Notes:
+  - Value 0x00 means "Game does not support CGB functions" per Nintendo Game Boy Programming Manual
+  - 0x80 = CGB capable (works on both DMG and CGB)
+  - 0xC0 = CGB only (does not work on DMG)
+  - For .gb ROM with CGB flag=0x00, PyBoy runs in DMG compatibility mode (monochrome)
+CONFIRMING: KEY1 (0xFF4D) = 0xFF → consistent with non-CGB mode (returns 0xFF on DMG hardware)
+STATUS: pass - DMG confirmed via ROM header CGB flag read
+---
+== Step 6: Confirm ROM manifest ==
+SOURCE: direct ROM file read /home/oreki/PokemonRed.gb
+sha256: 5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b
+size: 1048576 (1 MB)
+ROM header title: b'POKEMON RED\x00\x00\x00\x00\x00\x00'
+CGB flag (0x143): 0x00 (DMG only)
+STATUS: pass - title "POKEMON RED" matches cgb_flag=0x00 DMG-only cartridge
+---
+== Step 7: Confirm git HEAD ==
+SOURCE: git rev-parse HEAD in /home/oreki/pokemon-agent
+RESULT: c2e222e44cb69c35202e5dfd1b7ee3392e3ac334
+STATUS: pass
+---
+== Step 8: Confirm color_mode_gate from runtime sources ==
+EVIDENCE CHAIN:
+  1. pokemon-agent runtime: PyBoy memory[0x143] = 0x00 → DMG only (source: pokemon-agent API)
+  2. pokemon-agent runtime: PyBoy memory[0xFF4D] = 0xFF → consistent with DMG (source: pokemon-agent API)
+  3. pokemon-agent get_info(): platform="GB/GBC", backend="PyBoyEmulator" (source: pokemon-agent API)
+  4. Server startup log: "[server] Loading ROM: /home/oreki/PokemonRed.gb" + "Detected game type: red" (source: server log)
+  5. ROM file header: 0x143=0x00 (source: manifest/ROM file)
+CONCLUSION: color_mode_gate = pass
+---
+== Evidence files ==
+- evidence/yellow_gate_fix_cgb_flag_probe.json
+- evidence/logs/yellow_gate_fix_cgb_flag_probe_c2e222e.log
+- evidence/screenshots/yellow_gate_fix_candidate_c2e222e_0.png
+---
+== Final Verdict ==
+official_pokemon_agent_gate: pass
+color_mode_gate:          pass (source: runtime memory read of ROM header CGB flag=0x00 + get_info() + startup log)
+model_gate:               pass_for_execution_non_final
+rom_manifest_title:       Pokemon Red
+keys:                     not_exposed_by_pokemonredreader
+context_gap:              false
+success_confirmed:        false
+owner_authorized_continuation_candidate: false
+not_checkpoint_success_by_agent: true

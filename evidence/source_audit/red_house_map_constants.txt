@@ -1,0 +1,20 @@
+constants/tileset_constants.asm:5:	const REDS_HOUSE_1 ; 1
+constants/tileset_constants.asm:8:	const REDS_HOUSE_2 ; 4
+constants/map_constants.asm:69:	map_const REDS_HOUSE_1F,                  4,  4 ; $25
+constants/map_constants.asm:70:	map_const REDS_HOUSE_2F,                  4,  4 ; $26
+data/maps/songs.asm:40:	db MUSIC_PALLET_TOWN, BANK(Music_PalletTown) ; REDS_HOUSE_1F
+data/maps/songs.asm:41:	db MUSIC_PALLET_TOWN, BANK(Music_PalletTown) ; REDS_HOUSE_2F
+data/maps/headers/RedsHouse1F.asm:1:	map_header RedsHouse1F, REDS_HOUSE_1F, REDS_HOUSE_1, 0
+data/maps/headers/RedsHouse2F.asm:1:	map_header RedsHouse2F, REDS_HOUSE_2F, REDS_HOUSE_2, $00
+data/maps/headers/CopycatsHouse1F.asm:1:	map_header CopycatsHouse1F, COPYCATS_HOUSE_1F, REDS_HOUSE_1, 0
+data/maps/headers/CopycatsHouse2F.asm:1:	map_header CopycatsHouse2F, COPYCATS_HOUSE_2F, REDS_HOUSE_2, 0
+data/maps/objects/RedsHouse1F.asm:10:	warp_event  7,  1, REDS_HOUSE_2F, 1
+data/maps/objects/RedsHouse1F.asm:18:	def_warps_to REDS_HOUSE_1F
+data/maps/objects/RedsHouse2F.asm:5:	warp_event  7,  1, REDS_HOUSE_1F, 3
+data/maps/objects/RedsHouse2F.asm:11:	def_warps_to REDS_HOUSE_2F
+data/maps/objects/PalletTown.asm:10:	warp_event  5,  5, REDS_HOUSE_1F, 1
+data/maps/special_warps.asm:48:	special_warp_spec REDS_HOUSE_2F, 3, 6, REDS_HOUSE_2
+data/events/hidden_events.asm:10:	hidden_event_map REDS_HOUSE_2F
+data/events/hidden_events.asm:136:	hidden_events_for REDS_HOUSE_2F
+data/tilesets/bookshelf_tile_ids.asm:12:	bookshelf_tile REDS_HOUSE_1, $32, BookOrSculptureText
+data/wild/grass_water.asm:40:	dw NothingWildMons         ; REDS_HOUSE_1F
