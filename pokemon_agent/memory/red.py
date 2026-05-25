@@ -204,15 +204,20 @@ SPECIES_NAMES: Dict[int, str] = {
     147: "Dratini", 148: "Dragonair", 149: "Dragonite",
     150: "Mewtwo",
     151: "Mew",
+    # Gen I internal species index (used in RAM party struct byte 0):
+    177: "Squirtle",  # internal_index=0xB1, national_dex=7
 }
 
-# Internal-index -> Pokedex-number mapping (Gen 1 uses an internal index
-# that differs from dex number).  The *pokered* decomp lists them.
-# For simplicity the reader uses the species byte directly as the dex number
-# because the RAM party struct stores the **Pokedex** (national) number in
-# Red/Blue USA Rev-A for the *species* field at offset 0 of each party slot.
-# (Earlier docs call it "internal index" but in the party struct the first
-# byte is the **species/dex** number.)
+# --- Gen I Internal Species Index ---
+# The party struct at wPartyMon1Species (0xD16B) stores the Gen I internal
+# species index, NOT the National Pokédex number.  For Squirtle (National
+# Dex #7), the internal index is 0xB1 (177).  This differs from the pret/
+# pokered constants where SQUIRTLE=7, because different ROM revisions
+# use different internal tables.  The SPECIES_NAMES dict above maps both
+# National Dex numbers (1-151) and known internal indices (>151) to
+# display names.  When reading the species byte from party data, the
+# internal index is used directly as the lookup key; if not found, the
+# display falls back to the National Dex name if available.
 
 MOVE_NAMES: Dict[int, str] = {
     0: "(none)",
