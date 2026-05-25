@@ -199,13 +199,21 @@ class PyBoyEmulator(Emulator):
         """Advance emulation by *frames* frames.
 
         Injects a vblank-interrupt pending flag (IF bit 0) before each
-        sub-frame tick to compensate for PyBoy null-window mode which
-        never generates a real vblank.
+        sub-frame tick and forces the PPU/LCD pipeline by reading the
+        screen buffer after each tick.  PyBoy null-window mode does not
+        generate real vblank or STAT interrupts (no PPU scanlines), so
+        Gen 1 dialog/cutscene text cannot advance without these two steps.
         """
         pb = self._pyboy
         for _ in range(frames):
             pb.memory[0xFF0F] = pb.memory[0xFF0F] | 0x01  # fake vblank
             pb.tick()  # type: ignore[union-attr]
+            # Force PPU pipeline by reading the screen buffer.  PyBoy
+            # null-window mode defers pixel computation until the screen
+            # buffer is accessed; without this read, LY (0xFF44) never
+            # increments, STAT (0xFF41) never fires, and the game's
+            # dialog/cutscene render loop hangs.
+            _ = pb.screen.ndarray
             self.frame_count += 1
 
     # -- video --------------------------------------------------------------
