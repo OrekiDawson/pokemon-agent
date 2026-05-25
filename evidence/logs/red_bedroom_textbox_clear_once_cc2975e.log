@@ -1,0 +1,49 @@
+=== red_bedroom_textbox_clear_once ===
+Timestamp: 2026-05-25T11:34:30+00:00
+Git HEAD: cc2975e2848545e8faec7cb0a3cbb7a490eb5a50
+ROM: /home/oreki/xiaoyou_red/roms/PokemonRed.gb
+
+=== GATES ===
+official_pokemon_agent_gate: pass (HEAD=cc2975e, health=pass)
+color_mode_gate: pass (ROM header 0x143=0x00, DMG)
+model_gate: pass (deepseek-v4-flash)
+
+=== INITIAL STATE ===
+game: Pokemon Red/Blue (USA)
+frame: 1030
+map: Red's House 2F (id=38)
+pos: (3,6) down
+keys: []
+dialog.active: True, text_box_id: 1, text: null (expected)
+player: NINTEN, rival: SONY
+
+=== ACTION LOG ===
+Batch 1: hold_b_120, press_a, wait_60 -> frame=1230, text_box_id=1, keys=[]
+Batch 2: hold_b_120, press_a, wait_60 -> frame=1430, text_box_id=1, keys=[]
+Batch 3: hold_b_120, press_a, wait_60 -> frame=1630, text_box_id=1, keys=[]
+Batch 4: hold_b_120, press_a, wait_60 -> frame=1830, text_box_id=1, keys=[]
+
+=== PIXEL ANALYSIS ===
+Initial bottom non-white: 1187
+Batch 1 bottom: 1517  (+330, new text/content)
+Batch 2 bottom: 1536  (+19, slight change)
+Final bottom:   1474  (-62, slight change)
+Top region diffs (1024 frames): 0 pixels
+-> Dialog text IS scrolling (bottom pixel count varied), but game view frozen
+-> text_box_id=1 throughout -> dialog never fully closed
+
+=== VERDICT ===
+success_confirmed: false
+bedroom_textbox_cleared: false
+bedroom_textbox_persistent_gap: true
+stop_no_buttons: true
+not_checkpoint_success_by_agent: true
+owner_authorized_continuation_candidate: false
+action_schema_accepted: true
+
+=== OBSERVATIONS ===
+- hold_b_120 + press_a is accepted by schema (3 actions per batch)
+- Bottom pixel count varies between batches -> text IS advancing through different screens
+- But text_box_id stays 1 -> need more presses to fully clear dialog
+- Top region completely static -> player hasn't moved, bedroom unchanged
+- Possible cause: Mom's dialog may be longer than expected, or dialog includes YES/NO prompt that A alone can't clear

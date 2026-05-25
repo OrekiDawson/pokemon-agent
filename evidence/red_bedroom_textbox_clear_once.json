@@ -1,0 +1,113 @@
+{
+  "_meta": {
+    "probe": "red_bedroom_textbox_clear_once",
+    "timestamp": "2026-05-25T11:34:30+00:00",
+    "git_head": "cc2975e2848545e8faec7cb0a3cbb7a490eb5a50",
+    "rom": "/home/oreki/xiaoyou_red/roms/PokemonRed.gb",
+    "rom_title": "POKEMON RED",
+    "rom_src_cgb": 0,
+    "task": "red_bedroom_textbox_clear_once",
+    "max_batches": 4,
+    "auto_continue": false
+  },
+  "gates": {
+    "official_pokemon_agent_gate": {
+      "status": "pass",
+      "package_or_repo": "/home/oreki/pokemon-agent",
+      "git_head": "cc2975e2848545e8faec7cb0a3cbb7a490eb5a50",
+      "api_base": "http://127.0.0.1:9876",
+      "health_status": "pass",
+      "runtime_backend": "PyBoyEmulator (GB)",
+      "state_parser": "PokemonRedReader",
+      "input_api": "POST /action (press_X, walk_X, hold_X_N, wait_N) only"
+    },
+    "color_mode_gate": {
+      "status": "pass",
+      "mode": "DMG",
+      "source": "ROM header 0x143 = 0x00"
+    },
+    "model_gate": {
+      "status": "pass",
+      "model_name": "deepseek-v4-flash",
+      "source": "/home/oreki/.hermes/config.yaml"
+    }
+  },
+  "batches": [
+    {
+      "batch": 1,
+      "actions": ["hold_b_120","press_a","wait_60"],
+      "frame_after": 1230,
+      "dialog_active": true,
+      "text_box_id": 1,
+      "keys": []
+    },
+    {
+      "batch": 2,
+      "actions": ["hold_b_120","press_a","wait_60"],
+      "frame_after": 1430,
+      "dialog_active": true,
+      "text_box_id": 1,
+      "keys": []
+    },
+    {
+      "batch": 3,
+      "actions": ["hold_b_120","press_a","wait_60"],
+      "frame_after": 1630,
+      "dialog_active": true,
+      "text_box_id": 1,
+      "keys": []
+    },
+    {
+      "batch": 4,
+      "actions": ["hold_b_120","press_a","wait_60"],
+      "frame_after": 1830,
+      "dialog_active": true,
+      "text_box_id": 1,
+      "keys": []
+    }
+  ],
+  "pixel_analysis": {
+    "before_batches": {
+      "bottom_nonwhite": 1187
+    },
+    "after_batch_1": {
+      "bottom_nonwhite": 1517
+    },
+    "after_batch_2": {
+      "bottom_nonwhite": 1536
+    },
+    "final": {
+      "bottom_nonwhite": 1474,
+      "top_region_diffs_since_start": 0,
+      "colors": [
+        {"count": 20639, "rgba": "(255,255,255,255)"},
+        {"count": 1870, "rgba": "(0,0,0,255)"},
+        {"count": 288, "rgba": "(153,153,153,255)"},
+        {"count": 243, "rgba": "(85,85,85,255)"}
+      ]
+    }
+  },
+  "screenshots": {
+    "before": "evidence/screenshots/red_bedroom_textbox_clear_probe_1030.png (from last session)",
+    "batch_1": "evidence/screenshots/red_bedroom_textbox_clear_once_1230.png",
+    "batch_2": "evidence/screenshots/red_bedroom_textbox_clear_once_1430.png",
+    "final": "evidence/screenshots/red_bedroom_textbox_clear_once_final_1830.png"
+  },
+  "success": {
+    "success_confirmed": false,
+    "bedroom_textbox_cleared": false,
+    "bedroom_textbox_persistent_gap": true,
+    "gap_details": {
+      "persistent_gap": "4 batches of hold_b_120 + press_a + wait_60 completed. text_box_id remained 1 throughout all 4 batches. Bottom non-white pixels varied (1187→1517→1536→1474) suggesting dialog text IS scrolling (different text screens) but dialog never fully closed. Player position unchanged: (3,6). Top region 0 pixel changes — game view static.",
+      "possible_causes": [
+        "Mom's dialog may have more than 4 text screens in this sequence",
+        "The 'hold_b_120 + press_a' pattern may not be clearing each screen (B held 120 frames masks the A press)",
+        "The initial press_start may have entered a submenu (YES/NO prompt) instead of advancing text"
+      ]
+    }
+  },
+  "stop": true,
+  "not_checkpoint_success_by_agent": true,
+  "owner_authorized_continuation_candidate": false,
+  "action_schema_accepted": true
+}
