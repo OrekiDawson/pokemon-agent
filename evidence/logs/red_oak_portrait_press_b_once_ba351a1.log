@@ -1,0 +1,42 @@
+=== red_oak_portrait_press_b_once log ===
+git_head: ba351a1
+timestamp: 2026-05-25T20:07:00+08:00
+
+=== OBSERVE initial ===
+GET /state → frame=6740, keys=[], dialog.active=true, text_box_id=1, text="A"
+GET /screenshot → sha256=bbb0ccce, size=1865
+vision: DMG Oak portrait (4 colors)
+
+=== Batch 1/4 ===
+POST /action ["press_b","wait_90"] → success=true
+GET /state → frame=6850, keys=[], dialog.active=true, text_box_id=1, text="A"
+GET /screenshot → sha256=bbb0ccce (UNCHANGED)
+changed: false
+
+=== Batch 2/4 ===
+POST /action ["press_b","wait_90"] → success=true
+GET /state → frame=6960, keys=[], dialog.active=true, text_box_id=1, text="A"
+GET /screenshot → sha256=bbb0ccce (UNCHANGED)
+changed: false
+
+=== Batch 3/4 ===
+POST /action ["press_b","wait_90"] → success=true
+GET /state → frame=7070, keys=[], dialog.active=true, text_box_id=1, text="A"
+GET /screenshot → sha256=bbb0ccce (UNCHANGED)
+changed: false
+
+=== Batch 4/4 ===
+POST /action ["press_b","wait_90"] → success=true
+GET /state → frame=7180, keys=[], dialog.active=true, text_box_id=1, text="A"
+GET /screenshot → sha256=bbb0ccce (UNCHANGED)
+changed: false
+
+=== VERDICT ===
+oak_portrait_progressed_by_press_b: false
+oak_portrait_press_b_no_progress: true
+stop_no_buttons: true
+hard_stop: no
+keys_empty_throughout: true
+live_input_sent: true
+live_input_type: press_b_only
+gap: press_a 和 press_b 均导致零变化，需调查 text_addr 53067 的文本内容、或 joy_ignore 表面为 0 但内部有其他阻塞

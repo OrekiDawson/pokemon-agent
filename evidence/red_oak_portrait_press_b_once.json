@@ -1,0 +1,118 @@
+{
+  "task_id": "red_oak_portrait_press_b_once",
+  "target": "用 press_b 推进全屏 Oak 头像对话框",
+  "scope": "只推进对话；不移动、不下楼、不出房间",
+  "max_action_batches": 4,
+  "auto_continue": false,
+  "success_confirmed": false,
+  "gates": {
+    "official_pokemon_agent_gate": {
+      "path": "/home/oreki/pokemon-agent",
+      "git_head": "ba351a1",
+      "input_api": "GET /state + GET /screenshot + POST /action",
+      "status": "pass_required"
+    },
+    "color_mode_gate": {
+      "runtime_mode": "DMG",
+      "source": "ROM header 0x143=0x00 / API / config",
+      "status": "pass_required"
+    },
+    "model_gate": {
+      "model_name": "deepseek-v4-flash",
+      "source": "config/log",
+      "status": "pass"
+    }
+  },
+  "initial_state": {
+    "game": "Pokemon Red/Blue (USA)",
+    "frame": 6740,
+    "keys": [],
+    "map": "Red's House 2F",
+    "xy": [3, 6],
+    "facing": "up",
+    "dialog_active": true,
+    "text_box_id": 1,
+    "joy_ignore": 0,
+    "text": "A",
+    "text_bytes_hex": "80",
+    "screenshot_sha256": "bbb0ccce4d0056e0e6cd6bba95adf7803d05a7f9f00ab4d287989f9cb0ae4067",
+    "screenshot_file_size": 1865,
+    "vision_summary": "DMG monochrome — Oak full-screen portrait + bottom dialog (vision model misread as room scene)"
+  },
+  "batches": [
+    {
+      "batch": 1,
+      "actions": ["press_b", "wait_90"],
+      "state_after": {
+        "frame": 6850,
+        "keys": [],
+        "dialog_active": true,
+        "text_box_id": 1,
+        "text": "A",
+        "text_bytes_hex": "80"
+      },
+      "screenshot_sha256": "bbb0ccce4d0056e0e6cd6bba95adf7803d05a7f9f00ab4d287989f9cb0ae4067",
+      "changed": false
+    },
+    {
+      "batch": 2,
+      "actions": ["press_b", "wait_90"],
+      "state_after": {
+        "frame": 6960,
+        "keys": [],
+        "dialog_active": true,
+        "text_box_id": 1,
+        "text": "A",
+        "text_bytes_hex": "80"
+      },
+      "screenshot_sha256": "bbb0ccce4d0056e0e6cd6bba95adf7803d05a7f9f00ab4d287989f9cb0ae4067",
+      "changed": false
+    },
+    {
+      "batch": 3,
+      "actions": ["press_b", "wait_90"],
+      "state_after": {
+        "frame": 7070,
+        "keys": [],
+        "dialog_active": true,
+        "text_box_id": 1,
+        "text": "A",
+        "text_bytes_hex": "80"
+      },
+      "screenshot_sha256": "bbb0ccce4d0056e0e6cd6bba95adf7803d05a7f9f00ab4d287989f9cb0ae4067",
+      "changed": false
+    },
+    {
+      "batch": 4,
+      "actions": ["press_b", "wait_90"],
+      "state_after": {
+        "frame": 7180,
+        "keys": [],
+        "dialog_active": true,
+        "text_box_id": 1,
+        "text": "A",
+        "text_bytes_hex": "80"
+      },
+      "screenshot_sha256": "bbb0ccce4d0056e0e6cd6bba95adf7803d05a7f9f00ab4d287989f9cb0ae4067",
+      "changed": false
+    }
+  ],
+  "verdict": {
+    "success_stop": false,
+    "fail_stop": true,
+    "reason": "oak_portrait_press_b_no_progress — 4 批 press_b + wait_90 后截图 sha256 和 state 全部零变化",
+    "oak_portrait_progressed_by_press_b": false,
+    "oak_portrait_press_b_no_progress": true,
+    "stop_no_buttons": true,
+    "keys_empty_throughout": true,
+    "hard_stop": false,
+    "live_input_sent": true,
+    "live_input_type": "press_b_only"
+  },
+  "decision": {
+    "success_confirmed": false,
+    "owner_authorized_continuation_candidate": false,
+    "not_checkpoint_success_by_agent": true,
+    "gap": "oak_portrait_press_b_no_progress — press_a 和 press_b 均无反应，需调查 text_addr 53067 的文本是什么、joy_ignore 是否为 0 但内部有其他阻塞"
+  }
+}
