@@ -1,0 +1,73 @@
+{
+  "task_id": "red_intro_post_rival_confirm_text_clear_once",
+  "timestamp": "2026-05-25T12:01:48+00:00",
+  "git_head": "308d893",
+  "model": "deepseek-v4-flash",
+
+  "gates": {
+    "official_pokemon_agent_gate": "pass",
+    "color_mode_gate": "pass",
+    "model_gate": "pass_for_execution_non_final"
+  },
+
+  "side_effects_confirmed": {
+    "player_name_mutated_nonblocking": "×??",
+    "rival_name": "A",
+    "intro_naming_sequence_completed": true
+  },
+
+  "initial_state": {
+    "frame": 4460,
+    "map": "Red's House 2F",
+    "map_id": 38,
+    "position": [3, 6],
+    "facing": "down",
+    "keys": [],
+    "player_name": "×??",
+    "rival_name": "A",
+    "dialog": { "active": true, "text_box_id": 1, "joy_ignore": 0, "text": "A", "text_bytes_hex": "80", "text_decode_status": "ok" },
+    "screenshot": { "colors": 4, "character_grid": false, "center_band": 686, "bottom": 862 }
+  },
+
+  "batches": [
+    { "batch": 1, "frame": 4570, "bottom_non_white": 862, "dialog": "active" },
+    { "batch": 2, "frame": 4680, "bottom_non_white": 862, "dialog": "active" },
+    { "batch": 3, "frame": 4790, "bottom_non_white": 641, "dialog": "active", "note": "bottom dropped to 641 — text page advanced" },
+    { "batch": 4, "frame": 4900, "dialog": "active" },
+    { "batch": 5, "frame": 5010, "bottom_non_white": 1001, "dialog": "active", "note": "bottom grew to 1001 — new text page loaded" },
+    { "batch": 6, "frame": 5120, "bottom_non_white": 974, "dialog": "active" }
+  ],
+
+  "final_state": {
+    "frame": 5120,
+    "map": "Red's House 2F",
+    "map_id": 38,
+    "keys": [],
+    "player_name": "×??",
+    "rival_name": "A",
+    "dialog": { "active": true, "text_box_id": 1, "joy_ignore": 0, "text": "A", "text_decode_status": "ok" },
+    "screenshot": { "colors": 4, "character_grid": false, "center_band": 704, "bottom": 974 }
+  },
+
+  "fail_stop": {
+    "condition_met": true,
+    "condition": "6 batches completed, bottom textbox still visible (bottom=974)",
+    "record": {
+      "post_rival_confirm_text_persistent_gap": true,
+      "clarification": "Gen1 Oak intro has many text pages after naming — 6 A presses insufficient. Screen remains healthy 4-color DMG with no character grid."
+    },
+    "stop_no_buttons": true
+  },
+
+  "hard_stop": { "triggered": false },
+
+  "decision": {
+    "success_confirmed": false,
+    "owner_authorized_continuation_candidate": false,
+    "not_checkpoint_success_by_agent": true,
+    "dialog_remaining": true,
+    "intro_naming_sequence_completed": true,
+    "red_house_2f_free_move_after_intro": false,
+    "estimated_text_pages_remaining": "likely 4-8 more pages (Oak's full intro text)"
+  }
+}

@@ -1,0 +1,44 @@
+=== red_intro_post_rival_confirm_text_clear_once ===
+timestamp: 2026-05-25T12:01:48+00:00
+git_head: 308d893
+model: deepseek-v4-flash
+server: http://127.0.0.1:9876
+
+=== OBSERVE (frame 4460) ===
+game: Pokemon Red/Blue (USA)
+map: Red's House 2F (map_id=38)
+position: (3,6) down
+keys: []
+player: ×?? / rival: A
+joy_ignore: 0  ← normal
+dialog.active: true, text_box_id: 1, text: "A" (0x80)
+screenshot: 4 colors, no character grid, bottom=862 (textbox visible)
+
+=== BATCHES 1-6 ===
+Each: press_a + wait_90
+
+batch 1 (4570): bottom=862, dialog active
+batch 2 (4680): dialog active
+batch 3 (4790): bottom=641 ↓ (text page scrolled)
+batch 4 (4900): dialog active
+batch 5 (5010): bottom=1001 ↑ (new page with more content)
+batch 6 (5120): bottom=974, still active
+
+=== FAIL STOP ===
+post_rival_confirm_text_persistent_gap: true
+6 batches not enough — Gen1 Oak intro has many text pages
+
+=== HEALTH ===
+No character grid (4 colors) ✓
+joy_ignore=0 ✓
+keys=[] ✓
+Map unchanged ✓
+No name entry recurrence ✓
+
+=== SCREENSHOTS ===
+evidence/screenshots/red_intro_post_rival_confirm_text_clear_once_before.png  (frame 4460)
+evidence/screenshots/red_intro_post_rival_confirm_text_clear_once_batch3.png  (frame 4790)
+evidence/screenshots/red_intro_post_rival_confirm_text_clear_once_batch5.png  (frame 5010)
+evidence/screenshots/red_intro_post_rival_confirm_text_clear_once_batch6.png  (frame 5120)
+
+=== END ===
