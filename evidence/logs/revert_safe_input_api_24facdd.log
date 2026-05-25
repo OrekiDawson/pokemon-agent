@@ -1,0 +1,18 @@
+revert_safe_input_api_probe
+2026-05-25T18:25:31+08:00
+24facdd6ec698ac62f94ec605f3c4017d661f7cf
+24facdd Revert "yellow_safe_input_api_probe candidate evidence=safe_tap_safe_step_contract learned_card=official_action_api_not_enough_for_yellow_mainline"
+3c1f6ed yellow_safe_input_api_probe candidate evidence=safe_tap_safe_step_contract learned_card=official_action_api_not_enough_for_yellow_mainline
+202c719 red_bedroom_gap_probe candidate evidence=dialog_fix_a_until_fix learned_card=text_buffer_reader_needed_for_dialog_content
+230cc3d cp02 keys_reader_fixed evidence=GET_state_keys_empty+wait_60_probe+PNG learned_card=Red reader must expose keys before movement
+3168dfb yellow_gate_fix candidate evidence=color_mode_source_gap+state/log_manifest_probe learned_card=DMG不能只用截图或文件扩展名裁决，必须来自API/log/manifest/config
+?? evidence/logs/revert_safe_input_api_24facdd.log
+?? evidence/screenshots/red_bedroom_gap_final_230cc3d.png
+?? evidence/screenshots/red_pallet_text_230cc3d.png
+--- safe-tap/safe-step grep ---
+evidence/logs/revert_safe_input_api_24facdd.log:4:24facdd Revert "yellow_safe_input_api_probe candidate evidence=safe_tap_safe_step_contract learned_card=official_action_api_not_enough_for_yellow_mainline"
+evidence/logs/revert_safe_input_api_24facdd.log:5:3c1f6ed yellow_safe_input_api_probe candidate evidence=safe_tap_safe_step_contract learned_card=official_action_api_not_enough_for_yellow_mainline
+evidence/logs/revert_safe_input_api_24facdd.log:12:--- safe-tap/safe-step grep ---
+(none)
+--- set_keys/release_keys grep ---
+(none)
