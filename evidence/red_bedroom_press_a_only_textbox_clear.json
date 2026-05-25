@@ -1,0 +1,76 @@
+{
+  "_meta": {
+    "probe": "red_bedroom_press_a_only_textbox_clear",
+    "timestamp": "2026-05-25T11:37:30+00:00",
+    "git_head": "82a3b0c43f8ce2e81e699a9aedab8fdab8bca7e6",
+    "rom": "/home/oreki/xiaoyou_red/roms/PokemonRed.gb",
+    "rom_title": "POKEMON RED",
+    "rom_src_cgb": 0,
+    "task": "red_bedroom_press_a_only_textbox_clear",
+    "max_batches": 8,
+    "auto_continue": false
+  },
+  "gates": {
+    "official_pokemon_agent_gate": {
+      "status": "pass",
+      "git_head": "82a3b0c43f8ce2e81e699a9aedab8fdab8bca7e6",
+      "api_base": "http://127.0.0.1:9876",
+      "health_status": "pass",
+      "input_api": "POST /action (press_X, walk_X, hold_X_N, wait_N) only"
+    },
+    "color_mode_gate": {
+      "status": "pass",
+      "mode": "DMG",
+      "source": "ROM header 0x143 = 0x00"
+    },
+    "model_gate": {
+      "status": "pass",
+      "model_name": "deepseek-v4-flash",
+      "source": "/home/oreki/.hermes/config.yaml"
+    }
+  },
+  "batches": [
+    {"batch":1,"frame":1940,"text_box_id":1,"active":true,"keys":[],"bottom":1442},
+    {"batch":2,"frame":2050,"text_box_id":1,"active":true,"keys":[],"bottom":1451},
+    {"batch":3,"frame":2160,"text_box_id":1,"active":true,"keys":[],"bottom":1180},
+    {"batch":4,"frame":2270,"text_box_id":1,"active":true,"keys":[],"bottom":1497},
+    {"batch":5,"frame":2380,"text_box_id":1,"active":true,"keys":[],"bottom":1172},
+    {"batch":6,"frame":2490,"text_box_id":1,"active":true,"keys":[],"bottom":1377},
+    {"batch":7,"frame":2600,"text_box_id":1,"active":true,"keys":[],"bottom":1354},
+    {"batch":8,"frame":2710,"text_box_id":1,"active":true,"keys":[],"bottom":799}
+  ],
+  "pixel_analysis": {
+    "initial": {"bottom_nonwhite": 1474},
+    "final": {"bottom_nonwhite": 799, "top_region_diffs_since_start": 2399},
+    "bottom_trajectory": [1474, 1442, 1451, 1180, 1497, 1172, 1377, 1354, 799],
+    "observation": "Bottom pixel count oscillates (text changing between screens) then drops to 799 at batch 8. Top region shows 2399 pixel differences (game view changed - NEW compared to previous probes where top was frozen at 0)."
+  },
+  "screenshots": [
+    "evidence/screenshots/red_bedroom_press_a_only_textbox_clear_before_1830.png",
+    "evidence/screenshots/red_bedroom_press_a_only_textbox_clear_1940.png",
+    "evidence/screenshots/red_bedroom_press_a_only_textbox_clear_2050.png",
+    "evidence/screenshots/red_bedroom_press_a_only_textbox_clear_2160.png",
+    "evidence/screenshots/red_bedroom_press_a_only_textbox_clear_2270.png",
+    "evidence/screenshots/red_bedroom_press_a_only_textbox_clear_2380.png",
+    "evidence/screenshots/red_bedroom_press_a_only_textbox_clear_2490.png",
+    "evidence/screenshots/red_bedroom_press_a_only_textbox_clear_2600.png",
+    "evidence/screenshots/red_bedroom_press_a_only_textbox_clear_final_2710.png"
+  ],
+  "success": {
+    "success_confirmed": false,
+    "bedroom_textbox_cleared_by_press_a_only": false,
+    "bedroom_textbox_persistent_after_press_a_only": true,
+    "possible_yes_no_or_choice_wait": false,
+    "observation": "8 press_a batches completed. text_box_id=1 throughout. Bottom pixels fluctuated (1474→799) then dropped to 799. Top region unfrozen (2399 pixel changes) at batch 8 - game view is now different from initial bedroom. Dialog text IS advancing to different screens, but text_box_id never reaches 0.",
+    "possible_causes": [
+      "Mom's dialog is very long (>8 text screens)",
+      "Dialog may have transitioned to a sub-menu/choice state at batch 8 (bottom dropped to 799, top region changed)",
+      "The game may be at a YES/NO prompt requiring directional selection (not just A)",
+      "The dialog box may have been replaced by a different kind of overlay (menu, naming prompt)"
+    ]
+  },
+  "stop": true,
+  "not_checkpoint_success_by_agent": true,
+  "owner_authorized_continuation_candidate": false,
+  "action_schema_accepted": true
+}

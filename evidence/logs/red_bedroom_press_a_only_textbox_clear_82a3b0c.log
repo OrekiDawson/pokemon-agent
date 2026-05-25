@@ -1,0 +1,48 @@
+=== red_bedroom_press_a_only_textbox_clear ===
+Timestamp: 2026-05-25T11:37:30+00:00
+Git HEAD: 82a3b0c43f8ce2e81e699a9aedab8fdab8bca7e6
+ROM: /home/oreki/xiaoyou_red/roms/PokemonRed.gb
+
+=== GATES ===
+official_pokemon_agent_gate: pass (HEAD=82a3b0c, health=pass)
+color_mode_gate: pass (ROM header 0x143=0x00, DMG)
+model_gate: pass (deepseek-v4-flash)
+
+=== INITIAL STATE ===
+frame: 1830, map: Red's House 2F (id=38), pos: (3,6) down
+dialog.active: True, text_box_id: 1, keys: []
+bottom_nonwhite: 1474
+
+=== ACTION LOG (8 batches of press_a + wait_90) ===
+B01  frame=1940  text_box_id=1  active=True  keys=[]  bottom=1442
+B02  frame=2050  text_box_id=1  active=True  keys=[]  bottom=1451
+B03  frame=2160  text_box_id=1  active=True  keys=[]  bottom=1180
+B04  frame=2270  text_box_id=1  active=True  keys=[]  bottom=1497
+B05  frame=2380  text_box_id=1  active=True  keys=[]  bottom=1172
+B06  frame=2490  text_box_id=1  active=True  keys=[]  bottom=1377
+B07  frame=2600  text_box_id=1  active=True  keys=[]  bottom=1354
+B08  frame=2710  text_box_id=1  active=True  keys=[]  bottom=799
+
+=== KEY OBSERVATIONS ===
+- Bottom pixel count oscillated (1474→1442→1451→1180→1497→1172→1377→1354→799)
+- Each batch changes the dialog content (bottom pixel variance), confirming A advances text
+- After 8 A-presses, text_box_id STILL 1 -> dialog not fully cleared
+- Top region: 2399 pixel diffs at batch 8 (previously 0) -> game view IS changing now
+- Player still at (3,6), map=Red's House 2F
+- bottom=799 at batch 8 is lowest value seen -> possibly transitioning to sub-state
+
+=== VERDICT ===
+success_confirmed: false
+bedroom_textbox_cleared_by_press_a_only: false
+bedroom_textbox_persistent_after_press_a_only: true
+possible_yes_no_or_choice_wait: false (pixels kept changing - text in motion)
+stop_no_buttons: true
+not_checkpoint_success_by_agent: true
+
+=== NOTE ===
+Dialog text IS advancing with press_a (pixel variance proves it). 
+But 8 presses not enough to fully clear. The dialog sequence in bedroom
+may be longer than expected, or may have entered a choice/menu state 
+(bottom dropped to 799 at batch 8, top region unfrozen).
+Next step likely needs vision inspection of the batch 8 screenshot
+to determine what state the game is in.
