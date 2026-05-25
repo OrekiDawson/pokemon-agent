@@ -1,0 +1,110 @@
+=== red_bedroom_name_entry_end_once ===
+timestamp: 2026-05-25T11:45:30+00:00
+git_head: a5cfaff
+model: deepseek-v4-flash
+server: http://127.0.0.1:9876
+
+GATE STATUS:
+  official_pokemon_agent_gate: pass
+  color_mode_gate: pass (DMG)
+  model_gate: pass_for_execution_non_final
+
+=== INITIAL STATE (frame 2710) ===
+GET /state:
+  game: Pokemon Red/Blue (USA)
+  map: Red's House 2F (map_id=38)
+  position: (3, 6), facing: down
+  keys: []
+  dialog.active: true
+  dialog.text_box_id: 1
+  dialog.text: null
+  dialog.text_decode_status: no_dialog_text
+  dialog.joy_ignore: 64
+  battle: false
+  party: []
+  player: NINTEN
+  rival: SONY
+
+GET /screenshot:
+  mode: RGBA, size: 160x144
+  colors: 2 (white=20683, black=2357)
+  center band non-white: 1210
+  bottom non-white: 600
+  center pixel (80,72): (0,0,0,255) = BLACK
+  grid pattern: present (3x10 character grid, rows at y=34,40,56,72)
+
+=== BATCH 1 — walk_down x3 + press_a + wait_90 ===
+actions_executed: 5
+frame_after: 2880
+
+state_after:
+  dialog.text: "×"
+  dialog.text_bytes_hex: "f1"
+  dialog.text_decode_status: ok
+  dialog.joy_ignore: 64
+  keys: []
+  position: (3,6) down (unchanged)
+  map: Red's House 2F (unchanged)
+
+screenshot:
+  colors: 2
+  grid: still present
+  center band non-white: 1192
+  bottom non-white: 600
+
+=== BATCH 2 — walk_right x3 + press_a + wait_90 ===
+actions_executed: 5
+frame_after: 3050
+
+state_after:
+  dialog.text: "×<9C>"
+  dialog.text_bytes_hex: "f1 9c"
+  dialog.text_decode_status: decoded_with_unknown_bytes
+  dialog.joy_ignore: 64
+  keys: []
+  position: (3,6) down (unchanged)
+
+screenshot:
+  colors: 2
+  grid: still present
+
+=== BATCH 3 — walk_left x2 + press_a + wait_90 ===
+actions_executed: 4
+frame_after: 3200
+
+state_after:
+  dialog.text: "×<9C><9A>"
+  dialog.text_bytes_hex: "f1 9c 9a"
+  dialog.text_decode_status: decoded_with_unknown_bytes
+  dialog.joy_ignore: 64
+  keys: []
+  position: (3,6) down (unchanged)
+
+screenshot:
+  colors: 2
+  grid: still present
+
+=== FAIL STOP ===
+condition: 3 batches attempted, still character grid
+record: name_entry_end_candidate_failed: true
+stop_no_buttons: true
+
+=== OBSERVATION ===
+Text buffer grows exactly 1 byte per press_a:
+  batch 0 (before): null
+  batch 1 after: f1
+  batch 2 after: f1 9c
+  batch 3 after: f1 9c 9a
+
+This is consistent with name entry character selection (not normal dialog advance).
+Player name unchanged (NINTEN) — name not committed yet.
+walk_down/walk_right/walk_left navigated cursor but did not reach END position.
+Possible issue: walk_ actions hold direction for ~16 frames (multiple grid wraps) vs precise single-press navigation needed for name entry.
+
+=== SCREENSHOTS ===
+evidence/screenshots/red_bedroom_name_entry_end_once_before.png
+evidence/screenshots/red_bedroom_name_entry_end_once_batch1_after.png
+evidence/screenshots/red_bedroom_name_entry_end_once_batch2_after.png
+evidence/screenshots/red_bedroom_name_entry_end_once_batch3_after.png
+
+=== END ===

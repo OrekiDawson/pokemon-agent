@@ -1,0 +1,138 @@
+{
+  "task_id": "red_bedroom_name_entry_end_once",
+  "timestamp": "2026-05-25T11:45:30+00:00",
+  "git_head": "a5cfaff",
+  "model": "deepseek-v4-flash",
+
+  "gate_state": {
+    "official_pokemon_agent_gate": "pass",
+    "color_mode_gate": "pass",
+    "model_gate": "pass_for_execution_non_final"
+  },
+
+  "initial_state": {
+    "frame": 2710,
+    "map": "Red's House 2F",
+    "map_id": 38,
+    "position": [3, 6],
+    "facing": "down",
+    "keys": [],
+    "dialog": {
+      "active": true,
+      "text_box_id": 1,
+      "text": null,
+      "text_decode_status": "no_dialog_text",
+      "joy_ignore": 64
+    },
+    "battle": false,
+    "party": [],
+    "colors": 2,
+    "black_pixels": 2357,
+    "center_region_non_white": 1210,
+    "bottom_non_white": 600,
+    "grid_present": true
+  },
+
+  "batches": [
+    {
+      "batch": 1,
+      "actions": ["walk_down", "walk_down", "walk_down", "press_a", "wait_90"],
+      "actions_executed": 5,
+      "frame_after": 2880,
+      "state_after": {
+        "dialog": {
+          "active": true,
+          "text_box_id": 1,
+          "text": "×",
+          "text_bytes_hex": "f1",
+          "text_decode_status": "ok",
+          "joy_ignore": 64
+        },
+        "keys": [],
+        "map": "Red's House 2F",
+        "position": [3, 6],
+        "colors": 2,
+        "grid_still_present": true
+      }
+    },
+    {
+      "batch": 2,
+      "actions": ["walk_right", "walk_right", "walk_right", "press_a", "wait_90"],
+      "actions_executed": 5,
+      "frame_after": 3050,
+      "state_after": {
+        "dialog": {
+          "active": true,
+          "text_box_id": 1,
+          "text": "×<9C>",
+          "text_bytes_hex": "f1 9c",
+          "text_decode_status": "decoded_with_unknown_bytes",
+          "joy_ignore": 64
+        },
+        "keys": [],
+        "colors": 2,
+        "grid_still_present": true
+      }
+    },
+    {
+      "batch": 3,
+      "actions": ["walk_left", "walk_left", "press_a", "wait_90"],
+      "actions_executed": 4,
+      "frame_after": 3200,
+      "state_after": {
+        "dialog": {
+          "active": true,
+          "text_box_id": 1,
+          "text": "×<9C><9A>",
+          "text_bytes_hex": "f1 9c 9a",
+          "text_decode_status": "decoded_with_unknown_bytes",
+          "joy_ignore": 64
+        },
+        "keys": [],
+        "colors": 2,
+        "grid_still_present": true
+      }
+    }
+  ],
+
+  "observation": {
+    "text_growth_per_batch": "each press_a added 1 byte to text buffer — confirms name entry character selection mode, not dialog advance",
+    "byte_sequence": ["f1", "f1 9c", "f1 9c 9a"],
+    "grid_persistent_across_all_batches": true,
+    "no_map_change": true,
+    "no_keys_after": true,
+    "no_battle": true,
+    "no_party_change": true
+  },
+
+  "fail_stop": {
+    "condition_met": true,
+    "reason": "3 batches attempted, character grid persists after each, text buffer grows on each A press — name entry screen not exited",
+    "record": {
+      "name_entry_end_candidate_failed": true
+    }
+  },
+
+  "hard_stop": {
+    "triggered": false,
+    "keys_nonempty": false,
+    "non_red_rom": false,
+    "non_dmg_color": false,
+    "backend_bypass": false
+  },
+
+  "success_stop": {
+    "triggered": false
+  },
+
+  "decision": {
+    "success_confirmed": false,
+    "owner_authorized_continuation_candidate": false,
+    "not_checkpoint_success_by_agent": true,
+    "name_entry_screen_still_active": true,
+    "player_name_unchanged": "NINTEN",
+    "rival_name_unchanged": "SONY",
+    "cursor_navigation_not_reaching_END": true,
+    "recommendation": "name_entry_exit_strategy_needs_refinement"
+  }
+}
