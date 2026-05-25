@@ -1,0 +1,67 @@
+=== red_name_entry_start_end_once ===
+timestamp: 2026-05-25T11:48:12+00:00
+git_head: 41f7e06
+model: deepseek-v4-flash
+server: http://127.0.0.1:9876
+
+=== GATES ===
+official_pokemon_agent_gate: pass
+color_mode_gate: pass (DMG, 0x143=0x00)
+model_gate: pass_for_execution_non_final
+
+=== OBSERVE (frame 3200) ===
+GET /state:
+  game: Pokemon Red/Blue (USA)
+  map: Red's House 2F (map_id=38)
+  position: (3,6) down
+  keys: []
+  player: NINTEN / SONY
+  dialog.active: true, text_box_id: 1, joy_ignore: 64
+  dialog.text: "×<9C><9A>" (f1 9c 9a)
+
+GET /screenshot:
+  mode: RGBA, 160x144, 2 colors
+  pattern: character grid present (3x10)
+  center band non-white: 1192
+  bottom non-white: 600
+
+=== ACT ===
+POST /action {"actions":["press_start","wait_90"]}
+  success: true, actions_executed: 2
+
+=== VERIFY (frame 3310) ===
+GET /state:
+  game: Pokemon Red/Blue (USA)
+  map: Red's House 2F (map_id=38)
+  position: (3,6) down
+  keys: []
+  player: "×??" / SONY  ← CRITICAL: name changed!
+  dialog.active: true, text_box_id: 1, joy_ignore: 0  ← changed from 64 to 0!
+  dialog.text: "×<9C><9A>" (f1 9c 9a)
+
+GET /screenshot:
+  mode: RGBA, 160x144, 4 colors  ← back to DMG grayscale!
+  character grid: GONE (grid cell samples: 5 vs ~200)
+  center band non-white: 704 (was 1192)
+  bottom non-white: 830 (was 600)  ← new text box bottom bar
+  row y=100: ".BBBBBBBBB"  ← text box bar row
+
+=== KEY FINDINGS ===
+1. press_start on name entry screen = CONFIRM/END
+2. player name overwritten: NINTEN → "×??" (the 3 chars we selected in previous probe)
+3. joy_ignore 64→0: name entry waiting flag cleared
+4. Screenshot: 2→4 colors, grid gone, normal textbox at bottom
+5. press_start is the correct exit for Gen1 name entry screens
+
+=== STOP ===
+name_entry_exited_by_press_start: true
+stop: true
+success_confirmed: false
+owner_authorized_continuation_candidate: false
+not_checkpoint_success_by_agent: true
+
+=== SCREENSHOTS ===
+evidence/screenshots/red_name_entry_start_end_once_before.png
+evidence/screenshots/red_name_entry_start_end_once_after.png
+
+=== END ===

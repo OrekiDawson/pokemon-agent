@@ -1,0 +1,114 @@
+{
+  "task_id": "red_name_entry_start_end_once",
+  "timestamp": "2026-05-25T11:48:12+00:00",
+  "git_head": "41f7e06",
+  "model": "deepseek-v4-flash",
+
+  "gates": {
+    "official_pokemon_agent_gate": "pass",
+    "color_mode_gate": "pass",
+    "model_gate": "pass_for_execution_non_final"
+  },
+
+  "initial_state": {
+    "frame": 3200,
+    "game": "Pokemon Red/Blue (USA)",
+    "map": "Red's House 2F",
+    "map_id": 38,
+    "position": [3, 6],
+    "facing": "down",
+    "keys": [],
+    "player_name": "NINTEN",
+    "rival_name": "SONY",
+    "dialog": {
+      "active": true,
+      "text_box_id": 1,
+      "joy_ignore": 64,
+      "text": "×<9C><9A>",
+      "text_bytes_hex": "f1 9c 9a",
+      "text_decode_status": "decoded_with_unknown_bytes"
+    },
+    "screenshot_colors": 2,
+    "grid_detected": true,
+    "center_band_non_white": 1192,
+    "bottom_non_white": 600
+  },
+
+  "actions": ["press_start", "wait_90"],
+  "actions_executed": 2,
+
+  "final_state": {
+    "frame": 3310,
+    "game": "Pokemon Red/Blue (USA)",
+    "map": "Red's House 2F",
+    "map_id": 38,
+    "position": [3, 6],
+    "facing": "down",
+    "keys": []
+  },
+
+  "key_change": {
+    "player_name": {
+      "before": "NINTEN",
+      "after": "×??",
+      "meaning": "press_start CONFIRMED the name entry — our 3 selected characters (f1, 9c, 9a) overwrote NINTEN"
+    },
+    "joy_ignore": {
+      "before": 64,
+      "after": 0,
+      "meaning": "64 = name entry waiting input flag; 0 = name entry exited"
+    },
+    "dialog": {
+      "before": {
+        "active": true,
+        "text_box_id": 1,
+        "joy_ignore": 64,
+        "text": "×<9C><9A>",
+        "text_decode_status": "decoded_with_unknown_bytes"
+      },
+      "after": {
+        "active": true,
+        "text_box_id": 1,
+        "joy_ignore": 0,
+        "text": "×<9C><9A>",
+        "text_decode_status": "decoded_with_unknown_bytes"
+      }
+    },
+    "screenshot": {
+      "before_colors": 2,
+      "after_colors": 4,
+      "grid_detected_before": true,
+      "grid_detected_after": false,
+      "center_band_non_white": {"before": 1192, "after": 704},
+      "bottom_non_white": {"before": 600, "after": 830},
+      "row_y100_pattern": ".......... (before grid) → .BBBBBBBBB (after = bottom textbox bar visible)"
+    }
+  },
+
+  "success_stop": {
+    "condition_met": true,
+    "condition": "character grid disappeared, name entry exited",
+    "record": {
+      "name_entry_exited_by_press_start": true
+    },
+    "stop": true
+  },
+
+  "fail_stop": {
+    "triggered": false
+  },
+
+  "hard_stop": {
+    "triggered": false
+  },
+
+  "note": "press_start acts as CONFIRM/END on Gen1 name entry screen. Player name was accidentally overwritten from NINTEN to ×?? (the 3 characters we selected in previous batches). Dialog still active (new text box appeared after name confirmation), but name entry screen is fully exited.",
+
+  "decision": {
+    "success_confirmed": false,
+    "owner_authorized_continuation_candidate": false,
+    "not_checkpoint_success_by_agent": true,
+    "name_entry_exited": true,
+    "waiting_for_next_user_task": true
+  }
+}
