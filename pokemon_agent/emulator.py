@@ -63,21 +63,6 @@ class Emulator(ABC):
     def release_all(self) -> None:
         """Release every button."""
 
-    @abstractmethod
-    def set_keys(self, buttons: list[str]) -> None:
-        """Press and hold a set of buttons (no auto-release).
-
-        Parameters
-        ----------
-        buttons : list[str]
-            Buttons to press and hold, e.g. ``["a"]`` or ``["up", "a"]``.
-            Pass an empty list to release all buttons.
-        """
-
-    @abstractmethod
-    def release_keys(self) -> None:
-        """Release all currently held buttons."""
-
     def get_held_keys(self) -> list[str]:
         """Return a sorted list of currently held button names."""
         return sorted(self._held_buttons)
@@ -208,23 +193,6 @@ class PyBoyEmulator(Emulator):
                 pass
         self._held_buttons.clear()
 
-    def set_keys(self, buttons: list[str]) -> None:
-        """Press and hold the given buttons."""
-        pb = self._pyboy
-        for btn in buttons:
-            btn = btn.lower()
-            if btn not in self.BUTTONS:
-                raise ValueError(f"Unknown button '{btn}'. Valid: {self.BUTTONS}")
-            pb.button_press(btn)  # type: ignore[union-attr]
-            self._held_buttons.add(btn)
-
-    def release_keys(self) -> None:
-        """Release all currently held buttons."""
-        pb = self._pyboy
-        for btn in list(self._held_buttons):
-            pb.button_release(btn)  # type: ignore[union-attr]
-        self._held_buttons.clear()
-
     # -- timing -------------------------------------------------------------
 
     def tick(self, frames: int = 1) -> None:
@@ -351,21 +319,6 @@ class PyGBAEmulator(Emulator):
     def release_all(self) -> None:
         # PyGBA buttons auto-release after wait(); no-op here.
         pass
-
-    def set_keys(self, buttons: list[str]) -> None:
-        # PyGBA auto-releases on tick, so set_keys is effectively a no-op
-        # (each button press only lasts until the next wait/tick)
-        for btn in buttons:
-            btn = btn.lower()
-            method = self._BUTTON_MAP.get(btn)
-            if method is None:
-                raise ValueError(f"Unknown button '{btn}'. Valid: {self.BUTTONS}")
-            getattr(self._gba, method)()
-        self._held_buttons.update(b.lower() for b in buttons)
-
-    def release_keys(self) -> None:
-        # PyGBA auto-releases; just clear tracking
-        self._held_buttons.clear()
 
     # -- timing -------------------------------------------------------------
 
