@@ -1,0 +1,121 @@
+{
+  "task_id": "red_house_2f_to_1f_once",
+  "target": "从 Red's House 2F 找到楼梯并下到 Red's House 1F",
+  "scope": "只下楼；到 1F 后立即停；不出家门、不和 Mom/NPC 对话",
+  "max_action_batches": 6,
+  "batches_used": 6,
+  "auto_continue": false,
+  "success_confirmed": false,
+  "gates": {
+    "official_pokemon_agent_gate": {
+      "path": "/home/oreki/pokemon-agent",
+      "git_head": "3dbb7db",
+      "input_api": "GET /state + GET /screenshot + POST /action",
+      "status": "pass_required"
+    },
+    "color_mode_gate": {
+      "runtime_mode": "DMG",
+      "source": "ROM header 0x143=0x00 / API / config",
+      "status": "pass_required"
+    },
+    "model_gate": {
+      "model_name": "deepseek-v4-flash",
+      "source": "config/log",
+      "status": "pass"
+    }
+  },
+  "initial_state": {
+    "game": "Pokemon Red/Blue (USA)",
+    "frame": 1180,
+    "keys": [],
+    "map": "Red's House 2F",
+    "map_id": 38,
+    "xy": [3, 6],
+    "facing": "down",
+    "dialog_active": false,
+    "text_box_id": 0,
+    "player_name": "NINTEN",
+    "rival_name": "SONY"
+  },
+  "batches": [
+    {
+      "batch": 1,
+      "actions": ["walk_left","walk_left","walk_down","wait_30"],
+      "result": "Oak phone dialog triggered (mandatory event)",
+      "frame": 1270,
+      "dialog_active": true,
+      "xy": [3, 6],
+      "note": "Movement blocked by forced dialog"
+    },
+    {
+      "batch": 2,
+      "actions": ["press_a","wait_90"],
+      "result": "Dialog progressing (screenshot changed)",
+      "frame": 1380,
+      "dialog_active": true,
+      "text_box_id": 1,
+      "text": null
+    },
+    {
+      "batch": 3,
+      "actions": ["press_a","wait_90"],
+      "result": "Dialog progressing",
+      "frame": 1490,
+      "dialog_active": true,
+      "screenshot_changed": true
+    },
+    {
+      "batch": 4,
+      "actions": ["press_a","wait_90"],
+      "result": "Dialog progressing",
+      "frame": 1600,
+      "dialog_active": true,
+      "screenshot_changed": true
+    },
+    {
+      "batch": 5,
+      "actions": ["press_a","wait_90"],
+      "result": "Dialog progressing, text box visible in pixels (rows 97-142)",
+      "frame": 1710,
+      "dialog_active": true,
+      "screenshot_changed": true,
+      "pixel_analysis": "bottom textbox with text lines (148-152 nonwhite/row)"
+    },
+    {
+      "batch": 6,
+      "actions": ["press_a","wait_90"],
+      "result": "Dialog still active after max batches",
+      "frame": 1820,
+      "dialog_active": true,
+      "screenshot_changed": true
+    }
+  ],
+  "final_state": {
+    "frame": 1820,
+    "keys": [],
+    "map": "Red's House 2F",
+    "map_id": 38,
+    "xy": [3, 6],
+    "dialog_active": true,
+    "text_box_id": 1,
+    "text": null
+  },
+  "verdict": {
+    "success_stop": false,
+    "fail_stop": true,
+    "reason": "Oak phone dialog triggered by movement (mandatory Gen1 event); 5 press_a batches insufficient to clear multi-line dialog",
+    "red_house_1f_reached": false,
+    "still_on_2f": true,
+    "stairs_not_reached": true,
+    "dialog_interrupted_progress": true,
+    "dialog_is_progressing": true,
+    "keys_empty": true,
+    "hard_stop": false
+  },
+  "decision": {
+    "success_confirmed": false,
+    "owner_authorized_continuation_candidate": false,
+    "not_checkpoint_success_by_agent": true,
+    "gap": "oak_phone_dialog_needs_more_clearing — 强制 Oak 电话事件在尝试移动时触发；清除需要继续按 A"
+  }
+}

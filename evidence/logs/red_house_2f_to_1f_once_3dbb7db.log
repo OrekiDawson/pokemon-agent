@@ -1,0 +1,40 @@
+=== red_house_2f_to_1f_once log ===
+git_head: 3dbb7db
+timestamp: 2026-05-25T20:16:00+08:00
+clean state: player=NINTEN, rival=SONY, map=Red's House 2F, frame=1180
+
+=== Batch 1/6 ===
+Goal: Walk to stairs (bottom-left of bedroom)
+POST ["walk_left","walk_left","walk_down","wait_30"]
+Result: Movement BLOCKED — Oak phone dialog triggered (mandatory Gen1 event)
+frame=1270, xy=(3,6) unmoved, dialog.active=true
+
+=== Batch 2/6 ===
+POST ["press_a","wait_90"]
+frame=1380, dialog.active=true, text_box_id=1, text=null
+Screenshot changed — dialog progressing
+
+=== Batch 3/6 ===
+POST ["press_a","wait_90"]
+frame=1490, dialog.active=true, screenshot changed
+
+=== Batch 4/6 ===
+POST ["press_a","wait_90"]
+frame=1600, dialog.active=true, screenshot changed
+
+=== Batch 5/6 ===
+POST ["press_a","wait_90"]
+frame=1710, dialog.active=true
+Pixel analysis: text box visible at bottom (rows 97-142), text lines active
+
+=== Batch 6/6 ===
+POST ["press_a","wait_90"]
+frame=1820, dialog.active=true — still clearing Oak phone call
+
+=== VERDICT ===
+fail_stop: max batches reached
+red_house_1f_reached: false
+still_on_2f: true
+dialog_is_progressing: true (needs more press_a)
+stairs_not_reached: true
+gap: Oak forced phone dialog — clear with continued press_a, then navigate to stairs
