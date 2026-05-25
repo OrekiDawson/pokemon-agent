@@ -1,0 +1,87 @@
+{
+  "application": "red_bedroom_dialog_stuck_investigation",
+  "git_head": "230cc3d",
+  "timestamp": "2026-05-25T06:53:29.218502+00:00",
+  "gates": {
+    "official_pokemon_agent_gate": {
+      "required": true,
+      "package_or_repo": "/home/oreki/pokemon-agent",
+      "version_or_git_sha": "230cc3d",
+      "health_status": "pass",
+      "runtime_backend": "PyBoyEmulator (GB/GBC)",
+      "state_parser": "PokemonRedReader",
+      "input_api": "POST /action (press_X, walk_X, hold_X_N, wait_N, a_until_dialog_end)",
+      "status": "pass_with_input_gap"
+    },
+    "color_mode_gate": {
+      "required": true,
+      "mode": "DMG",
+      "source": "ROM header CGB=0x00 + PyBoy DMG renderer",
+      "status": "pass"
+    },
+    "model_gate": {
+      "model_name": "deepseek-v4-flash",
+      "source": "runtime/server/session/log/channel/config/API",
+      "status": "pass_for_execution_non_final"
+    },
+    "reader_gate": {
+      "PokemonRedReader": "pass",
+      "runtime_loaded_for_rom": "Pokemon Red/Blue (USA)",
+      "status": "pass",
+      "fixes_applied": [
+        "dialog.active now checks text_box_id != 0 OR joy_ignore & 0x20",
+        "a_until_dialog_end now checks state.dialog.active (not dialog_active)"
+      ]
+    }
+  },
+  "runtime_probes": {
+    "fresh_boot_last_frame": 7050,
+    "last_state": {
+      "map": "Pallet Town",
+      "pos": [
+        5,
+        5
+      ],
+      "name": "NINTEN",
+      "dialog_active": true,
+      "text_box_id": 1,
+      "joy_ignore": 128,
+      "keys": []
+    },
+    "last_bedroom_state": {
+      "map": "Red's House 2F",
+      "pos": [
+        6,
+        3
+      ],
+      "name": "NINTEN",
+      "dialog_active": true,
+      "text_box_id": 1,
+      "joy_ignore": 0,
+      "keys": []
+    }
+  },
+  "gaps": {
+    "bedroom_navigable_gap": "persistent_text_box_id_1_blocks_movement",
+    "root_cause": "Gen1 bedroom script has persistent text box after Mom dialog; cannot determine if YES/NO menu or auto-text without screen-reading or memory text reader",
+    "attempted_fixes": [
+      "press_a 10-30 times",
+      "press_down+press_a (YES/NO)",
+      "press_b",
+      "press_start",
+      "walk while dialog active",
+      "a_until_dialog_end (before and after fix)",
+      "hold_b_120 + press_a"
+    ],
+    "num_fresh_boot_attempts": 4,
+    "num_savestate_loads": 3
+  },
+  "decision": {
+    "success_confirmed": false,
+    "owner_authorized_continuation_candidate": false,
+    "not_checkpoint_success_by_agent": true,
+    "bedroom_gap": true,
+    "pallet_town_reachable_via_savestate": "bedroom_fixed puts player at Pallet Town (5,5) with name NINTEN but rendering broken",
+    "recommended_fix": "Add text content reader to read_dialog() to identify YES/NO prompts, or use hold_b while pressing A to speed through dialog"
+  }
+}

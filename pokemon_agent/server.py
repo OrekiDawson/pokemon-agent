@@ -168,7 +168,8 @@ async def _execute_action(action_str: str) -> None:
             # Check dialog flag via reader if available
             try:
                 state = _get_state_dict()
-                if not state.get("dialog_active", False):
+                dialog = state.get("dialog", {})
+                if not dialog.get("active", False):
                     break
             except Exception:
                 pass

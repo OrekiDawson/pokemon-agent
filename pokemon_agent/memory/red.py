@@ -694,10 +694,10 @@ class RedBlueMemoryReader(GameMemoryReader):
         """
         text_box = self.emu.read_u8(ADDR_TEXT_BOX_ID)
         joy_ignore = self.emu.read_u8(ADDR_JOY_IGNORE)
-        # Only use wJoyIgnore for the "active" flag — it's the game
-        # engine's actual input-lock signal. wTextBoxID is kept for
-        # informational purposes but not used for the active check.
-        in_dialog = bool(joy_ignore & 0x20)
+        # Any dialog is active if wTextBoxID is non-zero OR wJoyIgnore
+        # bit 5 is set.  wJoyIgnore bit 7 is the "text box open" flag
+        # that the game engine checks to block movement.
+        in_dialog = bool(text_box != 0) or bool(joy_ignore & 0x20)
         return {
             "active": in_dialog,
             "text_box_id": text_box,
