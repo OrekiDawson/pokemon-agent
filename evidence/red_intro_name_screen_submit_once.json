@@ -1,0 +1,78 @@
+{
+  "task_id": "red_intro_name_screen_submit_once",
+  "timestamp": "2026-05-25T11:56:20+00:00",
+  "git_head": "6240614",
+  "model": "deepseek-v4-flash",
+
+  "gates": {
+    "official_pokemon_agent_gate": "pass",
+    "color_mode_gate": "pass",
+    "model_gate": "pass_for_execution_non_final"
+  },
+
+  "initial_state": {
+    "frame": 4190,
+    "map": "Red's House 2F",
+    "map_id": 38,
+    "position": [3, 6],
+    "facing": "down",
+    "keys": [],
+    "player_name": "×??",
+    "rival_name": "SONY",
+    "dialog": { "active": true, "text_box_id": 1, "joy_ignore": 64, "text": null, "text_decode_status": "no_dialog_text" },
+    "screenshot": { "colors": 2, "character_grid": true, "center_band": 1210, "bottom": 600 }
+  },
+
+  "actions": ["press_start", "wait_90"],
+
+  "final_state": {
+    "frame": 4300,
+    "map": "Red's House 2F",
+    "map_id": 38,
+    "position": [3, 6],
+    "facing": "down",
+    "keys": [],
+    "dialog": { "active": true, "text_box_id": 1, "joy_ignore": 64, "text": null, "text_decode_status": "no_dialog_text" }
+  },
+
+  "key_changes": {
+    "player_name": { "before": "×??", "after": "×??", "changed": false },
+    "rival_name": { "before": "SONY", "after": "", "changed": true, "meaning": "press_start CLEARED rival name — naming state machine advanced to rival name entry" }
+  },
+
+  "screenshot_after": {
+    "colors": 2,
+    "character_grid": true,
+    "center_band": 1210,
+    "bottom": 600,
+    "row_pattern": "slightly different from before — suggests rival name entry screen layout vs player name entry"
+  },
+
+  "classification_update": {
+    "intro_naming_sequence": true,
+    "rival_name_now_empty": true,
+    "likely_current_screen": "rival_name_entry_screen",
+    "player_name_confirmed": true,
+    "naming_flow_stage": "rival_name_pending"
+  },
+
+  "fail_stop": {
+    "condition_met": true,
+    "condition": "press_start executed but joy_ignore=64 and character grid still present",
+    "record": {
+      "name_screen_start_submit_failed": true,
+      "clarification": "press_start did submit player name (rival_name cleared), but moved to rival name screen rather than exiting naming flow entirely"
+    },
+    "stop_no_buttons": true
+  },
+
+  "hard_stop": { "triggered": false },
+
+  "decision": {
+    "success_confirmed": false,
+    "owner_authorized_continuation_candidate": false,
+    "not_checkpoint_success_by_agent": true,
+    "intro_naming_sequence_pending_rival_name": true,
+    "current_name_screen_submitted_by_start": false
+  }
+}

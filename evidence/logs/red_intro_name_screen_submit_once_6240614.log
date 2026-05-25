@@ -1,0 +1,56 @@
+=== red_intro_name_screen_submit_once ===
+timestamp: 2026-05-25T11:56:20+00:00
+git_head: 6240614
+model: deepseek-v4-flash
+server: http://127.0.0.1:9876
+
+=== OBSERVE (frame 4190) ===
+game: Pokemon Red/Blue (USA)
+map: Red's House 2F (map_id=38)
+position: (3,6) down
+keys: []
+player: "×??"
+rival: "SONY"
+dialog.active: true, text_box_id: 1, joy_ignore: 64, text: null
+screenshot: 2 colors, character grid present, center=1210, bottom=600
+==> All conditions met for name_entry_screen
+
+=== ACT ===
+POST /action {"actions":["press_start","wait_90"]}
+success: true, actions_executed: 2
+
+=== VERIFY (frame 4300) ===
+GET /state:
+  keys: []
+  player.name: "×??" (unchanged)
+  rival_name: "" (was "SONY")  ← CLEARED
+  joy_ignore: 64 (still)
+  dialog.active: true, text_box_id: 1
+  text: null, text_decode_status: no_dialog_text
+  map: Red's House 2F (unchanged)
+
+GET /screenshot:
+  2 colors, grid still present, center=1210, bottom=600
+  Row pattern slightly different from before
+  (narrower cluster — likely rival name layout vs player name layout)
+
+=== KEY FINDINGS ===
+1. press_start submitted the player naming screen (rival name cleared to "")
+2. But this advanced to the RIVAL name entry screen, not exited the naming flow
+3. joy_ignore=64 persists because we're now in a new name screen (rival)
+4. The screen looks similar (2-color grid) but with subtle layout differences
+
+=== NAMING FLOW HYPOTHESIS ===
+Stage 1: Player name entry → press_start → confirm text → 8×A
+Stage 2: Rival name entry (current) → need rival name or press_start default
+
+=== FAIL STOP ===
+name_screen_start_submit_failed: true
+condition: press_start didn't exit name entry (just advanced to next stage)
+stop_no_buttons: true
+
+=== SCREENSHOTS ===
+evidence/screenshots/red_intro_name_screen_submit_once_before.png  (frame 4190)
+evidence/screenshots/red_intro_name_screen_submit_once_after.png   (frame 4300)
+
+=== END ===
