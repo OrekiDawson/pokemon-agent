@@ -120,7 +120,7 @@ async def broadcast(event: dict):
 def _get_state_dict() -> dict:
     """Build full game state from the memory reader."""
     from pokemon_agent.state.builder import build_game_state
-    return build_game_state(_reader)
+    return build_game_state(_reader, frame_count=_emulator.frame_count if _emulator else None)
 
 
 def _get_screenshot_bytes() -> bytes:

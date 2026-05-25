@@ -41,6 +41,7 @@ def build_game_state(
             "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
             "frame_count": frame_count,
         },
+        "keys": reader.emu.get_held_keys(),
     }
 
     sections = {

@@ -33,6 +33,7 @@ class Emulator(ABC):
     def __init__(self) -> None:
         self.frame_count: int = 0
         self.rom_path: Optional[str] = None
+        self._held_buttons: set[str] = set()
 
     # -- lifecycle ----------------------------------------------------------
 
@@ -61,6 +62,10 @@ class Emulator(ABC):
     @abstractmethod
     def release_all(self) -> None:
         """Release every button."""
+
+    def get_held_keys(self) -> list[str]:
+        """Return a sorted list of currently held button names."""
+        return sorted(self._held_buttons)
 
     # -- timing -------------------------------------------------------------
 
@@ -146,6 +151,11 @@ class PyBoyEmulator(Emulator):
         self._pyboy = PyBoy(rom_path, window="null")
         self.rom_path = rom_path
         self.frame_count = 0
+        # PyBoy 2.7.x null window does not generate PPU scanlines, so no
+        # vblank interrupt fires.  Force-enable the game's timer (TAC bit 2)
+        # and inject IF bit 0 on each tick (see tick() below) so the game
+        # advances even without real vblank.
+        self._pyboy.memory[0xFF07] = 0xF4  # TAC: enable timer, 4096 Hz
 
     def close(self) -> None:
         """Stop PyBoy."""
@@ -168,8 +178,10 @@ class PyBoyEmulator(Emulator):
             raise ValueError(f"Unknown button '{button}'. Valid: {self.BUTTONS}")
         pb = self._pyboy
         pb.button_press(button)  # type: ignore[union-attr]
+        self._held_buttons.add(button)
         self.tick(frames)
         pb.button_release(button)  # type: ignore[union-attr]
+        self._held_buttons.discard(button)
 
     def release_all(self) -> None:
         """Release all buttons."""
@@ -179,13 +191,20 @@ class PyBoyEmulator(Emulator):
                 pb.button_release(btn)  # type: ignore[union-attr]
             except Exception:
                 pass
+        self._held_buttons.clear()
 
     # -- timing -------------------------------------------------------------
 
     def tick(self, frames: int = 1) -> None:
-        """Advance emulation by *frames* frames."""
+        """Advance emulation by *frames* frames.
+
+        Injects a vblank-interrupt pending flag (IF bit 0) before each
+        sub-frame tick to compensate for PyBoy null-window mode which
+        never generates a real vblank.
+        """
         pb = self._pyboy
         for _ in range(frames):
+            pb.memory[0xFF0F] = pb.memory[0xFF0F] | 0x01  # fake vblank
             pb.tick()  # type: ignore[union-attr]
             self.frame_count += 1
 
@@ -225,6 +244,9 @@ class PyBoyEmulator(Emulator):
         path = str(Path(path).expanduser().resolve())
         with open(path, "rb") as f:
             self._pyboy.load_state(f)  # type: ignore[union-attr]
+        # Save states store TAC with timer disabled (bit 2 = 0).
+        # Re-enable it so the game advances.
+        self._pyboy.memory[0xFF07] = 0xF4  # type: ignore[index]
 
     # -- info ---------------------------------------------------------------
 
