@@ -1,0 +1,49 @@
+=== red_bedroom_batch8_state_classify_readonly ===
+Timestamp: 2026-05-25T11:40:00+00:00
+Git HEAD: 2e893e94d0f9ca26682a5f80783eb36b6edfda81
+ROM: /home/oreki/xiaoyou_red/roms/PokemonRed.gb
+Actions: 0 (readonly)
+
+=== GATES ===
+official_pokemon_agent_gate: pass (HEAD=2e893e9, health=pass)
+color_mode_gate: pass (ROM header 0x143=0x00, DMG)
+model_gate: pass (deepseek-v4-flash)
+
+=== STATE (frame=2710) ===
+map: Red's House 2F (id=38)
+pos: (3,6) down
+keys: []
+dialog.active: True, text_box_id: 1, joy_ignore: 64
+dialog.text: null (expected for Gen1 scripted dialog)
+menu: {} (not active), battle: False
+player: NINTEN, rival: SONY, money: 3000
+
+=== PIXEL ANALYSIS ===
+Total colors: ONLY 2 (prev: 4)
+White: 20683, Black: 2357
+Bottom non-white: 799 (prev: 1474, -46%)
+Top non-white: 1558 (top region CHANGED: 2399 pixel diffs from initial)
+No gray shades present — screen is pure black+white
+
+=== CENTER BAND SCAN (y=30-90) ===
+Row 34-36: Full-width black lines (~152px border)
+Row 40-46: 10 character-cell blocks (grid row 1)
+Row 56-62: 10 character-cell blocks (grid row 2)
+Row 72-78: 10 character-cell blocks (grid row 3)
+Row 88: Sparse text ("lower case" indicator?)
+
+=== CLASSIFICATION ===
+PRIMARY: yes_no_choice (medium confidence)
+ALTERNATIVE: name_entry_screen (pixel pattern consistent, but game state conflicts)
+
+=== RATIONALE ===
+- 8 A-presses through Mom's dialog = dialog should be near end
+- YES/NO prompt would keep text_box_id=1 but require direction+A
+- 2-color mode = simple choice overlay, no background rendering
+- Character grid pattern could be YES/NO layout or name entry grid
+- Vision model says "name entry" but has 0% reliability track record
+
+=== STOP ===
+classified: true
+next_action: none (readonly)
+not_checkpoint_success_by_agent: true

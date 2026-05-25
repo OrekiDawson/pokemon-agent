@@ -1,0 +1,110 @@
+{
+  "_meta": {
+    "probe": "red_bedroom_batch8_state_classify_readonly",
+    "timestamp": "2026-05-25T11:40:00+00:00",
+    "git_head": "2e893e94d0f9ca26682a5f80783eb36b6edfda81",
+    "rom": "/home/oreki/xiaoyou_red/roms/PokemonRed.gb",
+    "rom_title": "POKEMON RED",
+    "rom_src_cgb": 0,
+    "task": "red_bedroom_batch8_state_classify_readonly",
+    "max_action_batches": 0
+  },
+  "gates": {
+    "official_pokemon_agent_gate": {
+      "status": "pass",
+      "git_head": "2e893e94d0f9ca26682a5f80783eb36b6edfda81",
+      "api_base": "http://127.0.0.1:9876",
+      "health_status": "pass",
+      "input_api": "GET /state + GET /screenshot only (readonly)"
+    },
+    "color_mode_gate": {
+      "status": "pass",
+      "mode": "DMG",
+      "source": "ROM header 0x143 = 0x00"
+    },
+    "model_gate": {
+      "status": "pass",
+      "model_name": "deepseek-v4-flash",
+      "source": "/home/oreki/.hermes/config.yaml"
+    }
+  },
+  "runtime": {
+    "frame_count": 2710,
+    "map": "Red's House 2F",
+    "map_id": 38,
+    "xy": [3, 6],
+    "facing": "down",
+    "keys": [],
+    "dialog": {
+      "active": true,
+      "text_box_id": 1,
+      "joy_ignore": 64,
+      "text": null,
+      "text_decode_status": "no_dialog_text"
+    },
+    "menu_active": false,
+    "battle_active": false,
+    "player_name": "NINTEN",
+    "rival_name": "SONY",
+    "money": 3000
+  },
+  "pixel_analysis": {
+    "total_colors": 2,
+    "colors_detail": [
+      {"count": 20683, "rgba": "(255,255,255,255)", "name": "white"},
+      {"count": 2357, "rgba": "(0,0,0,255)", "name": "black"}
+    ],
+    "bottom_nonwhite_pixels": 799,
+    "top_nonwhite_pixels": 1558,
+    "top_region_changed_since_initial": true,
+    "color_mode_change": "PREVIOUS screenshots (batches 0-1830) had 4 colors (white+black+2 grays). Batch 8 has only 2 colors (white+black). All gray shades disappeared — consistent with a white-background overlay screen (name entry, YES/NO choice, or simple menu).",
+    "center_pixel_80_72": "RGBA(0,0,0,255) — BLACK (likely text, cursor, or grid element)",
+    "bottom_border_scan": {
+      "left_edge_x0_7": "Consistent 2 black pixels across rows 96-118 (text box border), then 0 from rows 120-143",
+      "right_edge_x152_159": "Same pattern as left edge — consistent 2 pixels rows 96-118, then 0",
+      "row_116": "148 black pixels — heavy content line (likely text line in dialog)",
+      "interpretation": "Sparse text box border at bottom, not a full-height dialog. Compact dialog area."
+    },
+    "center_band_density": {
+      "y34_36": "Full-width horizontal black lines (~152px) — possible title bar or top border",
+      "y40_46": "10 character-cell blocks across width, spaced 12-14px apart — character grid pattern",
+      "y56_62": "10 character-cell blocks — second row of grid",
+      "y72_78": "10 character-cell blocks — third row of grid",
+      "y88": "Sparse black pixels — possible bottom row or 'lower case' indicator",
+      "interpretation": "3 rows of 10 character cells strongly suggests a CHARACTER GRID (name entry screen or choice menu grid)"
+    },
+    "right_40px_density": "Rows 40/56/72/88 have 6-11 black pixels each — consistent with vertical scroll indicators or END/OK button"
+  },
+  "vision_classification": {
+    "model_claim": "name_entry_screen (YOUR NAME? / letter grid)",
+    "model_reliability": "LOW — vision model has consistently hallucinated text (previously: 'GAM3 F1RE' on title, 'Hello the' on bedroom dialog, 'Gengar vs Pikachu'). However, the pixel density scan (3 rows × 10 character cells) is physically consistent with a character grid."
+  },
+  "classification": {
+    "primary": "yes_no_choice",
+    "confidence": "medium",
+    "primary_rationale": [
+      "Most likely: After exhausting Mom's text dialog (5+ screens), final screen is a YES/NO prompt (e.g., 'Are you ready to go?')",
+      "text_box_id=1 with joy_ignore=64 (bit 6) could indicate choice-selection wait state",
+      "Only 2 colors consistent with simple YES/NO box overlay (no background tiles rendered)",
+      "Explains why 8 A-presses did not close dialog — needs direction+A, not A alone",
+      "map_id still 38 (Red's House 2F) — still in bedroom"
+    ],
+    "alternative": "name_entry_screen",
+    "alternative_rationale": [
+      "Character grid pixel pattern (3 rows × 10 cells) matches naming screen layout",
+      "Only 2 colors (black+white) consistent with name entry UI",
+      "HOWEVER: player already named (NINTEN), rival already named (SONY)",
+      "No known Gen1 script triggers a naming screen from the bedroom"
+    ],
+    "rejected": {
+      "normal_textbox_more_pages": "Rejected — 8 A presses should exhaust Mom's dialog. 2-color mode is unprecedented for normal text boxes (always 4-color with gray border in DMG)",
+      "menu_or_subscreen": "Rejected — menu field shows empty dict (not active). No right-side menu box detected",
+      "black_transition_or_warp": "Rejected — screen has content (2357 black pixels), frame advancing normally (2710)"
+    }
+  },
+  "stop": true,
+  "classified": true,
+  "next_action": "none (readonly)",
+  "success_confirmed": false,
+  "not_checkpoint_success_by_agent": true
+}
