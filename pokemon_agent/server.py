@@ -347,7 +347,15 @@ async def screenshot():
     _ensure_emulator()
     try:
         png_bytes = await _run_sync(_get_screenshot_bytes)
-        return Response(content=png_bytes, media_type="image/png")
+        return Response(
+            content=png_bytes,
+            media_type="image/png",
+            headers={
+                "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+                "Pragma": "no-cache",
+                "Expires": "0",
+            },
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Screenshot error: {e}")
 
