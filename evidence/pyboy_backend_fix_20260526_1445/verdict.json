@@ -1,0 +1,38 @@
+{
+  "task": "pyboy_backend_render_fix",
+  "changes": [
+    "emulator.py: added classify_png_health() standalone function",
+    "emulator.py: added tick_rendered() - always forces screen.ndarray after each tick",
+    "emulator.py: added release_all_keys() - explicit button release helper",
+    "emulator.py: added after_action_settle(frame) - release_all + tick_rendered",
+    "emulator.py: added _raw_screen_png() - convert get_screen to PNG bytes",
+    "emulator.py: added get_screen_png_safe() - retry with 5/10/20/30/60/120 frames",
+    "server.py: _get_screenshot_bytes() now uses get_screen_png_safe()",
+    "server.py: GET /screenshot returns 503 + JSON on screenshot_gap",
+    "server.py: GET /screenshot/base64 returns 503 + JSON on screenshot_gap",
+    "server.py: _execute_action uses after_action_settle instead of raw tick",
+    "server.py: _execute_action wait_N uses tick_rendered instead of tick"
+  ],
+  "verified_behavior": {
+    "tick_rendered": "pass",
+    "after_action_settle": "pass",
+    "classify_png_health": "pass",
+    "get_screen_png_safe_healthy": "pass (2938 bytes, classify=ok at frame 340)",
+    "get_screen_png_safe_gap": "pass (503 with reason=too_small_or_blank at frame 970+)",
+    "battle_menu_visible": "pass (non-blank, non-white, 2938 bytes)",
+    "battle_escape_chain": "executable but enemy already HP=0 → cannot verify clean escape"
+  },
+  "gap": "pyboy_backend_render_fix_partial",
+  "remaining_bug": "battle_nullwindow_freeze at post-ko transition (enemy HP=0 → battle=true)",
+  "improvement_over_before": [
+    "Before: battle freeze produced 446-byte all-black PNG returned as HTTP 200",
+    "After: battle freeze produces 503 with explicit gap reason",
+    "Before: agent could mistake blank PNG for real game frame",
+    "After: agent gets clear signal to stop on screenshot_gap"
+  ],
+  "stop_no_buttons": true,
+  "success_confirmed": false,
+  "owner_authorized_continuation_candidate": false,
+  "not_checkpoint_success_by_agent": true,
+  "evidence_dir": "evidence/pyboy_backend_fix_20260526_1445/"
+}

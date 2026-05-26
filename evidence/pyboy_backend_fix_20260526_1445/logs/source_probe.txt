@@ -1,0 +1,29 @@
+51:    def press(self, button: str, frames: int = 1) -> None:
+63:    def release_all(self) -> None:
+73:    def tick(self, frames: int = 1) -> None:
+79:    def get_screen(self) -> "Image.Image":
+168:    def press(self, button: str, frames: int = 1) -> None:
+186:    def release_all(self) -> None:
+198:    def tick(self, frames: int = 1) -> None:
+228:                _ = pb.screen.ndarray
+242:                    _ = pb.screen.ndarray
+248:    def get_screen(self) -> "Image.Image":
+250:        return self._pyboy.screen.image  # type: ignore[union-attr]
+346:    def press(self, button: str, frames: int = 1) -> None:
+354:    def release_all(self) -> None:
+360:    def tick(self, frames: int = 1) -> None:
+366:    def get_screen(self) -> "Image.Image":
+367:        return self._gba.screen.to_pil()  # type: ignore[union-attr]
+=== GIT ===
+8537ceb
+ M pokemon_agent/emulator.py
+?? error.log
+?? evidence/pyboy_backend_fix_20260526_1445/
+?? evidence/screenshots/red_bedroom_gap_final_230cc3d.png
+?? evidence/screenshots/red_pallet_text_230cc3d.png
+=== SERVER ACTION/SCREENSHOT ===
+126:def _get_screenshot_bytes() -> bytes:
+152:async def _execute_action(action_str: str) -> None:
+344:@app.get("/screenshot")
+363:@app.get("/screenshot/base64")
+375:@app.post("/action")

@@ -124,20 +124,22 @@ def _get_state_dict() -> dict:
 
 
 def _get_screenshot_bytes() -> bytes:
-    """Grab the current frame as PNG bytes."""
-    screen = _emulator.get_screen()          # PIL Image or numpy array
-    buf = io.BytesIO()
-    # If it's a numpy array, convert to PIL first
+    """Grab the current frame as PNG bytes using safe retry logic."""
     try:
-        from PIL import Image
-        if not isinstance(screen, Image.Image):
-            import numpy as np
-            screen = Image.fromarray(screen)
-        screen.save(buf, format="PNG")
-    except ImportError:
-        # Fallback: assume screen already has save()
-        screen.save(buf, format="PNG")
-    return buf.getvalue()
+        return _emulator.get_screen_png_safe()
+    except AttributeError:
+        # Fallback for emulators that don't have get_screen_png_safe (PyGBA etc.)
+        screen = _emulator.get_screen()          # PIL Image or numpy array
+        buf = io.BytesIO()
+        try:
+            from PIL import Image
+            if not isinstance(screen, Image.Image):
+                import numpy as np
+                screen = Image.fromarray(screen)
+            screen.save(buf, format="PNG")
+        except ImportError:
+            screen.save(buf, format="PNG")
+        return buf.getvalue()
 
 
 # ---------------------------------------------------------------------------
@@ -163,8 +165,8 @@ async def _execute_action(action_str: str) -> None:
 
     if action_str == "a_until_dialog_end":
         for _ in range(10):  # max 300 frames = 10 * 30
-            await _run_sync(_emulator.press, "a")
-            await _run_sync(_emulator.tick, 30)
+            await _run_sync(_emulator.press, "a", 8)
+            await _run_sync(_emulator.after_action_settle, 22)
             # Check dialog flag via reader if available
             try:
                 state = _get_state_dict()
@@ -181,9 +183,9 @@ async def _execute_action(action_str: str) -> None:
     if parts[0] == "press" and len(parts) >= 2:
         button = "_".join(parts[1:])
         # Hold button for 8 frames so the game registers the press,
-        # then wait 12 frames for the game to process it.
+        # then settle with rendered ticks for stable screenshot.
         await _run_sync(_emulator.press, button, 8)
-        await _run_sync(_emulator.tick, 12)
+        await _run_sync(_emulator.after_action_settle, 12)
         return
 
     if parts[0] == "walk" and len(parts) >= 2:
@@ -194,9 +196,9 @@ async def _execute_action(action_str: str) -> None:
         #   - wWalkCounter starts at 8, decrements each frame (2 px/frame
         #     = 16 px = 1 tile). Total walk animation = ~16 frames.
         #   - Minimum total frames for a confirmed tile move = 17.
-        #   - We use hold=8 + wait=12 = 20 total for a safety margin.
+        #   - We use hold=8 + after_action_settle(12) = 20 total.
         await _run_sync(_emulator.press, direction, 8)
-        await _run_sync(_emulator.tick, 12)
+        await _run_sync(_emulator.after_action_settle, 12)
         return
 
     if parts[0] == "hold" and len(parts) >= 3:
@@ -207,7 +209,7 @@ async def _execute_action(action_str: str) -> None:
 
     if parts[0] == "wait" and len(parts) == 2:
         frames = int(parts[1])
-        await _run_sync(_emulator.tick, frames)
+        await _run_sync(_emulator.tick_rendered, frames)
         return
 
     raise ValueError(f"Unknown action format: {action_str}")
@@ -356,6 +358,14 @@ async def screenshot():
                 "Expires": "0",
             },
         )
+    except RuntimeError as e:
+        msg = str(e)
+        if msg.startswith("screenshot_gap:"):
+            raise HTTPException(
+                status_code=503,
+                detail={"gap": "screenshot_gap", "reason": msg.split(":", 1)[1]},
+            )
+        raise HTTPException(status_code=500, detail=f"Screenshot error: {e}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Screenshot error: {e}")
 
@@ -368,6 +378,14 @@ async def screenshot_base64():
         png_bytes = await _run_sync(_get_screenshot_bytes)
         b64 = base64.b64encode(png_bytes).decode("ascii")
         return {"image": b64, "format": "png"}
+    except RuntimeError as e:
+        msg = str(e)
+        if msg.startswith("screenshot_gap:"):
+            raise HTTPException(
+                status_code=503,
+                detail={"gap": "screenshot_gap", "reason": msg.split(":", 1)[1]},
+            )
+        raise HTTPException(status_code=500, detail=f"Screenshot error: {e}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Screenshot error: {e}")
 

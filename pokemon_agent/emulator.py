@@ -6,6 +6,7 @@ screen capture, memory access, and save states across emulator backends.
 
 from __future__ import annotations
 
+import io
 import os
 from abc import ABC, abstractmethod
 from pathlib import Path
@@ -15,6 +16,34 @@ try:
     from PIL import Image
 except ImportError:
     Image = None  # type: ignore[assignment,misc]
+
+
+# ---------------------------------------------------------------------------
+# PNG health classifier (no game-logic dependency)
+# ---------------------------------------------------------------------------
+
+def classify_png_health(png: bytes) -> str:
+    """Return 'ok', 'too_small_or_blank', 'all_white', or 'all_black'.
+
+    Pure image-health check — does NOT judge game progress.
+    """
+    if not png or len(png) < 1000:
+        return "too_small_or_blank"
+    try:
+        img = Image.open(io.BytesIO(png)).convert("RGB")
+    except Exception:
+        return "too_small_or_blank"
+    pixels = list(img.getdata())
+    n = len(pixels)
+    if n == 0:
+        return "too_small_or_blank"
+    white = sum(1 for p in pixels if p == (255, 255, 255))
+    black = sum(1 for p in pixels if p == (0, 0, 0))
+    if white / n > 0.98:
+        return "all_white"
+    if black / n > 0.98:
+        return "all_black"
+    return "ok"
 
 
 # ---------------------------------------------------------------------------
@@ -214,20 +243,33 @@ class PyBoyEmulator(Emulator):
         """
         pb = self._pyboy
         for _ in range(frames):
-            pb.memory[0xFF0F] = pb.memory[0xFF0F] | 0x01  # fake vblank
-            pb.tick()  # type: ignore[union-attr]
-            # Force PPU pipeline by reading the screen buffer, but only
-            # when the LCD is enabled.  PyBoy null-window mode defers
-            # pixel computation until the screen buffer is accessed;
-            # without this read, LY (0xFF44) never increments, STAT
-            # (0xFF41) never fires, and the game's dialog/cutscene
-            # render loop hangs.  Skipping the read while LCD is off
-            # avoids rendering white frames during VRAM-load transitions
-            # (e.g. battle attack animations) that would otherwise
-            # corrupt the PPU state.
-            lcdc = pb.memory[0xFF40]
-            if lcdc & 0x80:  # LCD enable bit 7
+            lcdc_before = pb.memory[0xFF40]
+            lcd_enabled = lcdc_before & 0x80
+
+            if lcd_enabled:
+                # LCD is running — inject fake vblank to advance the game's
+                # interrupt-driven subsystems (dialog/cutscene text, joypad
+                # polling, OAM DMA), then force the PPU pipeline via the
+                # screen buffer read so LY/STAT advance correctly in
+                # null-window mode.
+                pb.memory[0xFF0F] = pb.memory[0xFF0F] | 0x01
+                pb.tick()
                 _ = pb.screen.ndarray
+            else:
+                pb.tick()
+
+            # After the tick, check whether the game re-enabled the LCD
+            # during this frame.  Gen 1's battle engine briefly disables
+            # the LCD to load VRAM data (attack animation, HP bar, etc.),
+            # then turns it back on.  The re-enable event itself does not
+            # generate a vblank, so we inject one here and force a render
+            # to kickstart the scanline pipeline.
+            if not lcd_enabled:
+                lcdc_after = pb.memory[0xFF40]
+                if lcdc_after & 0x80:
+                    pb.memory[0xFF0F] = pb.memory[0xFF0F] | 0x01
+                    _ = pb.screen.ndarray
+
             self.frame_count += 1
 
     # -- video --------------------------------------------------------------
@@ -235,6 +277,72 @@ class PyBoyEmulator(Emulator):
     def get_screen(self) -> "Image.Image":
         """Return current screen as a PIL Image (160×144)."""
         return self._pyboy.screen.image  # type: ignore[union-attr]
+
+    # -- safe rendering helpers --------------------------------------------
+
+    def tick_rendered(self, frames: int = 1) -> None:
+        """Advance *frames* with forced screen-buffer reads after each tick.
+
+        Unlike :meth:`tick` (which only reads the screen buffer when the LCD
+        is enabled), this method always performs a screen-buffer read in an
+        attempt to drain any stale PPU state.  Use after key-release settles
+        and before screenshot captures when the screen may be in a transition
+        (battle, fade, dialog close, etc.).
+        """
+        pb = self._pyboy
+        for _ in range(frames):
+            pb.memory[0xFF0F] = pb.memory[0xFF0F] | 0x01  # vblank injection
+            pb.tick()
+            _ = pb.screen.ndarray  # force PPU pipeline
+            self.frame_count += 1
+
+    def release_all_keys(self) -> None:
+        """Explicitly release every known button."""
+        for btn in self.BUTTONS:
+            try:
+                self._pyboy.button_release(btn)  # type: ignore[union-attr]
+            except Exception:
+                pass
+        self._held_buttons.clear()
+
+    def after_action_settle(self, frames: int = 12) -> None:
+        """Release all held keys and advance *frames* with forced rendering.
+
+        Call after every press/walk action so the emulator has time to
+        process the input and draw the resulting frame before the next
+        action or state read.
+        """
+        self.release_all_keys()
+        self.tick_rendered(frames)
+
+    def _raw_screen_png(self) -> bytes:
+        """Grab the current screen as PNG bytes (no retry)."""
+        screen = self.get_screen()
+        buf = io.BytesIO()
+        screen.save(buf, format="PNG")
+        return buf.getvalue()
+
+    def get_screen_png_safe(self) -> bytes:
+        """Return healthy screenshot PNG bytes.
+
+        Runs the screen through ``classify_png_health`` and retries with
+        increasing frame advances (5, 10, 20, 30, 60, 120) if the image
+        appears blank/white/black.  Raises ``RuntimeError`` with a
+        ``screenshot_gap:<reason>`` message when all retries are exhausted.
+        """
+        from pokemon_agent.emulator import classify_png_health
+
+        png = self._raw_screen_png()
+        bad = classify_png_health(png)
+        if bad == "ok":
+            return png
+        for frames in (5, 10, 20, 30, 60, 120):
+            self.tick_rendered(frames)
+            png = self._raw_screen_png()
+            bad = classify_png_health(png)
+            if bad == "ok":
+                return png
+        raise RuntimeError(f"screenshot_gap:{bad}")
 
     # -- memory -------------------------------------------------------------
 
