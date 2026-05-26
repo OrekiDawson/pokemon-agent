@@ -175,7 +175,10 @@ class Emulator(ABC):
 class PyBoyEmulator(Emulator):
     """Wraps the *PyBoy* library for .gb / .gbc ROMs.
 
-    Runs headless (``window='null'``) so no display server is required.
+    Window mode is read from the ``PYBOY_WINDOW_MODE`` environment variable
+    (defaulting to ``"null"``).  Set ``PYBOY_WINDOW_MODE=SDL2`` with a valid
+    ``DISPLAY`` (e.g. via ``Xvfb``) to use the full SDL2 render path that
+    includes the window-layer tile content missing from null-window mode.
     """
 
     def __init__(self) -> None:
@@ -198,7 +201,8 @@ class PyBoyEmulator(Emulator):
         if not os.path.isfile(rom_path):
             raise FileNotFoundError(f"ROM not found: {rom_path}")
 
-        self._pyboy = PyBoy(rom_path, window="null")
+        window_mode = os.environ.get("PYBOY_WINDOW_MODE", "null")
+        self._pyboy = PyBoy(rom_path, window=window_mode)
         self.rom_path = rom_path
         self.frame_count = 0
         # PyBoy 2.7.x null window does not generate PPU scanlines, so no
@@ -326,15 +330,33 @@ class PyBoyEmulator(Emulator):
                 pass
         self._held_buttons.clear()
 
-    def after_action_settle(self, frames: int = 12) -> None:
+    def after_action_settle(self, frames: int = 12, settle: bool = False) -> None:
         """Release all held keys and advance *frames* with forced rendering.
 
         Call after every press/walk action so the emulator has time to
         process the input and draw the resulting frame before the next
         action or state read.
+
+        Parameters
+        ----------
+        frames : int
+            Number of rendered ticks before returning.
+        settle : bool
+            If True, also runs ``settle_window_toggle()`` to force Gen 1
+            window-layer materialisation after a button press that may
+            have toggled the GB window (press_a, press_b, press_start).
+            D-pad and walk actions set this to False to avoid the 180+-
+            frame settle overhead that can corrupt WRAM cursor values.
+
+        Does NOT write to WRAM, send input, or edit save state.
         """
         self.release_all_keys()
         self.tick_rendered(frames)
+        # Only run settle for button presses that toggle the GB window.
+        # D-pad / walk actions skip settle to avoid 180+ frame overhead
+        # that corrupts WRAM values (e.g. battle cursor 0xCC26).
+        if settle:
+            self.settle_window_toggle()
 
     def _raw_screen_png(self) -> bytes:
         """Grab the current screen as PNG bytes (no retry)."""
@@ -350,8 +372,15 @@ class PyBoyEmulator(Emulator):
         increasing frame advances (5, 10, 20, 30, 60, 120) if the image
         appears blank/white/black.  Raises ``RuntimeError`` with a
         ``screenshot_gap:<reason>`` message when all retries are exhausted.
+
+        Also triggers the null-window window-layer refresh mitigation
+        when the GB window is currently visible, so battle menu overlays
+        are more reliably captured.
         """
         from pokemon_agent.emulator import classify_png_health
+
+        # Force window layer materialisation unconditionally
+        self.settle_window_toggle()
 
         png = self._raw_screen_png()
         bad = classify_png_health(png)
@@ -439,6 +468,76 @@ class PyBoyEmulator(Emulator):
         except Exception:
             return ("read_failed", 0)
         return (classify_png_health(png), len(png))
+
+    # -- window toggle mitigation for PyBoy null-window mode -----------------
+
+    def _read_io8(self, addr: int) -> int | None:
+        """Read a single byte from emulator memory, returning None on failure."""
+        try:
+            return int(self._pyboy.memory[addr]) & 0xFF
+        except Exception:
+            return None
+
+    def _window_visible(self) -> bool:
+        """Return True if the GB window layer is currently enabled and on-screen.
+
+        Checks LCDC bit 5 (window enable) and WY < 144 (window Y within
+        visible area).  Returns False if either check fails or the emulator
+        is not initialised.
+        """
+        lcdc = self._read_io8(0xFF40)
+        wy = self._read_io8(0xFF4A)
+        if lcdc is None or wy is None:
+            return False
+        return bool(lcdc & 0x20) and wy < 144
+
+    def settle_window_toggle(self, max_frames: int = 30) -> None:
+        """Gentle Gen1 / PyBoy null-window mitigation.
+
+        After the game hides the window layer (WY=144) and re-shows it
+        (WY=0) during battle intro-text → main-menu transitions, PyBoy's
+        null-window PPU renderer may not flush the window tilemap to the
+        frame buffer.  This method advances the emulator for a bounded
+        number of frames (max 30) with forced screen-buffer reads to
+        trigger window-layer materialisation.
+
+        **Limited to 30 frames max** — does NOT toggle LCDC registers
+        (avoiding PPU state machine corruption on SDL2-backed backends)
+        and does NOT inject vblank interrupts.
+
+        Fast path: if the window is not visible and the screen is already
+        healthy, returns immediately without advancing any frames.
+        """
+        pb = self._pyboy
+        if pb is None:
+            return
+        # Fast path: skip if window not active and screen already OK.
+        # When WY=0 (window ON screen), we still want the gentle advance
+        # so the tilemap has a chance to materialise.
+        if not self._window_visible():
+            try:
+                png = self._raw_screen_png()
+                if classify_png_health(png) == "ok":
+                    return
+            except Exception:
+                pass
+        # Gentle progressive advance: 1, 2, 4, 8, 15 frames = 30 total.
+        # Stay well within Game Boy framerate expectations (~60 fps).
+        for step in (1, 2, 4, 8, 15):
+            try:
+                for _ in range(step):
+                    pb.tick()
+                    _ = pb.screen.ndarray
+                    self.frame_count += 1
+            except Exception:
+                pass
+            # Check if the window layer has materialised
+            try:
+                png = self._raw_screen_png()
+                if classify_png_health(png) == "ok" and len(png) >= 1500:
+                    return
+            except Exception:
+                pass
 
 
 # ---------------------------------------------------------------------------

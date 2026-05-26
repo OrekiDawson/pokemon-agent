@@ -98,10 +98,10 @@ def _ensure_emulator():
         raise HTTPException(status_code=503, detail="Emulator not initialised")
 
 
-async def _run_sync(func, *args):
+async def _run_sync(func, *args, **kwargs):
     """Run a blocking emulator call in the default executor."""
     loop = asyncio.get_running_loop()
-    return await loop.run_in_executor(None, partial(func, *args))
+    return await loop.run_in_executor(None, partial(func, *args, **kwargs))
 
 
 async def broadcast(event: dict):
@@ -150,6 +150,10 @@ _ACTION_RE = re.compile(
     r"^(?P<kind>press|walk|hold|wait|a_until_dialog_end)(?:_(?P<rest>.+))?$"
 )
 
+# Buttons that toggle the GB window layer (battle menu, dialog).
+# Only these should trigger the expensive settle_window_toggle.
+_WINDOW_TOGGLE_BUTTONS = frozenset({"a", "b", "start", "select"})
+
 
 async def _execute_action(action_str: str) -> None:
     """Parse and execute a single action string on the emulator.
@@ -166,7 +170,7 @@ async def _execute_action(action_str: str) -> None:
     if action_str == "a_until_dialog_end":
         for _ in range(10):  # max 300 frames = 10 * 30
             await _run_sync(_emulator.press, "a", 8)
-            await _run_sync(_emulator.after_action_settle, 22)
+            await _run_sync(_emulator.after_action_settle, 22, settle=True)
             # Check dialog flag via reader if available
             try:
                 state = _get_state_dict()
@@ -184,8 +188,12 @@ async def _execute_action(action_str: str) -> None:
         button = "_".join(parts[1:])
         # Hold button for 8 frames so the game registers the press,
         # then settle with rendered ticks for stable screenshot.
+        # Only A/B/START/SELECT trigger the expensive settle_window_toggle;
+        # D-pad (up/down/left/right) skips it to avoid 180+ frame overhead
+        # that can corrupt WRAM cursor values (e.g. 0xCC26).
         await _run_sync(_emulator.press, button, 8)
-        await _run_sync(_emulator.after_action_settle, 12)
+        needs_settle = button in _WINDOW_TOGGLE_BUTTONS
+        await _run_sync(_emulator.after_action_settle, 12, settle=needs_settle)
         return
 
     if parts[0] == "walk" and len(parts) >= 2:
