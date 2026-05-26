@@ -57,6 +57,9 @@ ADDR_BATTLE_TYPE   = 0xD057   # 0=none, 1=wild, 2=trainer
 ADDR_ENEMY_COUNT   = 0xD89C
 ADDR_ENEMY_SPECIES = 0xD89D
 ADDR_ENEMY_DATA    = 0xD8A4   # 44 bytes per mon
+ADDR_MENU_CURSOR_X = 0xCC24   # wMenuCursorX: 0=left, 1=right
+ADDR_MENU_CURSOR_Y = 0xCC25   # wMenuCursorY: 0=top, 1=bottom
+ADDR_MENU_CURSOR_POS = 0xCC26 # wMenuCursorPosition: linear index for 2D menus; battle 2x2: 0=FIGHT,1=PKMN,2=ITEM,3=RUN
 
 # -- Dialog --
 ADDR_TEXT_BOX_ID   = 0xD125   # wTextBoxID
@@ -658,7 +661,11 @@ class RedBlueMemoryReader(GameMemoryReader):
         return items
 
     def read_battle(self) -> Dict[str, Any]:
-        """Read battle state (whether in battle & enemy info)."""
+        """Read battle state (whether in battle & enemy info).
+
+        Also attempts to read the battle menu cursor position when the
+        menu is visible (battle active AND no dialog text scrolling).
+        """
         battle_type = self.emu.read_u8(ADDR_BATTLE_TYPE)
         type_name = {0: "none", 1: "wild", 2: "trainer"}.get(battle_type, f"unknown({battle_type})")
         result: Dict[str, Any] = {
@@ -689,6 +696,33 @@ class RedBlueMemoryReader(GameMemoryReader):
                 "status": enemy_status,
                 "moves": moves,
             }
+
+            # -- battle menu cursor detection --
+            # Menu is visible when battle active AND no dialog text scrolling.
+            joy_ignore = self.emu.read_u8(ADDR_JOY_IGNORE)
+            dialog_active = bool(joy_ignore & 0x20)
+            result["battle_menu_visible"] = not dialog_active
+
+            if not dialog_active:
+                # Read the linear cursor position index at 0xCC26 (wMenuCursorPosition).
+                # Gen1 battle menu is 2x2 grid (FIGHT/PKMN/ITEM/RUN).
+                # Empirical testing on Red (USA Rev A) confirmed 0xCC26 uses
+                # COLUMN-MAJOR (not row-major) ordering:
+                #   0 = FIGHT (top-left),    1 = ITEM (bottom-left)
+                #   2 = PKMN (top-right),   3 = RUN  (bottom-right)
+                cur_pos = self.emu.read_u8(ADDR_MENU_CURSOR_POS) & 0xFF
+                if cur_pos == 0:
+                    result["battle_cursor"] = "fight"
+                elif cur_pos == 1:
+                    result["battle_cursor"] = "item"
+                elif cur_pos == 2:
+                    result["battle_cursor"] = "pkmn"
+                elif cur_pos == 3:
+                    result["battle_cursor"] = "run"
+                else:
+                    result["battle_cursor"] = "unknown"
+            else:
+                result["battle_cursor"] = "unknown"
         return result
 
     def read_dialog(self) -> Dict[str, Any]:
