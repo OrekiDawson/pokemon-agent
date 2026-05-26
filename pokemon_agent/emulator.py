@@ -146,6 +146,27 @@ class Emulator(ABC):
             "frame_count": self.frame_count,
         }
 
+    # -- PPU debug diagnostics ---------------------------------------------
+
+    def read_ppu_debug(self) -> Dict[str, object]:
+        """Return PPU/hardware diagnostic registers.
+
+        Subclasses should read LCDC, STAT, LY, IF, IE, and a screen health
+        classification.  Default implementation returns an empty placeholder.
+        """
+        return {
+            "available": False,
+            "reason": f"{self.__class__.__name__} does not implement read_ppu_debug",
+        }
+
+    def _classify_screen_from_emulator(self) -> tuple[str, int]:
+        """Return (health, png_len) for the current screen.
+
+        Default implementation returns (\"not_implemented\", 0).
+        """
+        _ = self
+        return ("not_implemented", 0)
+
 
 # ---------------------------------------------------------------------------
 # PyBoy backend (Game Boy / Game Boy Color)
@@ -384,6 +405,40 @@ class PyBoyEmulator(Emulator):
         info = super().get_info()
         info["platform"] = "GB/GBC"
         return info
+
+    # -- PPU debug diagnostics ---------------------------------------------
+
+    def read_ppu_debug(self) -> Dict[str, object]:
+        """Return PPU/hardware diagnostic registers for GB/GBC.
+
+        Reads LCDC, STAT, LY, IF, IE, WY, WX and a screen health
+        classification from the PyBoy emulator.
+        """
+        pb = self._pyboy
+        if pb is None:
+            return {"available": False, "reason": "pyboy_not_initialized"}
+        health, png_len = self._classify_screen_from_emulator()
+        return {
+            "available": True,
+            "lcdc_ff40": pb.memory[0xFF40] & 0xFF,
+            "stat_ff41": pb.memory[0xFF41] & 0xFF,
+            "ly_ff44": pb.memory[0xFF44] & 0xFF,
+            "wy_ff4a": pb.memory[0xFF4A] & 0xFF,
+            "wx_ff4b": pb.memory[0xFF4B] & 0xFF,
+            "if_ff0f": pb.memory[0xFF0F] & 0xFF,
+            "ie_ffff": pb.memory[0xFFFF] & 0xFF,
+            "screen_health": health,
+            "screen_png_len": png_len,
+            "frame": self.frame_count,
+        }
+
+    def _classify_screen_from_emulator(self) -> tuple[str, int]:
+        """Return (health, png_len) by grabbing a fresh PNG from screen."""
+        try:
+            png = self._raw_screen_png()
+        except Exception:
+            return ("read_failed", 0)
+        return (classify_png_health(png), len(png))
 
 
 # ---------------------------------------------------------------------------

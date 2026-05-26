@@ -42,6 +42,7 @@ def build_game_state(
             "frame_count": frame_count,
         },
         "keys": reader.emu.get_held_keys(),
+        "ppu_debug": reader.emu.read_ppu_debug(),
     }
 
     sections = {
