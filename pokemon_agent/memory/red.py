@@ -782,7 +782,18 @@ class RedBlueMemoryReader(GameMemoryReader):
         }
 
     def read_flags(self) -> Dict[str, Any]:
-        """Read key story / event flags."""
+        """Read key story / event flags.
+
+        Uses bag-item presence as the primary source for has_oaks_parcel
+        rather than the EVENT_GOT_OAKS_PARCEL flag, because that flag
+        only records "ever picked up the parcel", not "still carrying it".
+        See pret/pokered/constants/event_constants.asm for flag layout.
+
+        Key event flag indices (base addr ADDR_EVENT_FLAGS = 0xD747):
+          EVENT_GOT_POKEDEX     = flag 37   (0xD74B bit 5)
+          EVENT_OAK_GOT_PARCEL  = flag 56   (0xD74E bit 0)
+          EVENT_GOT_OAKS_PARCEL = flag 57   (0xD74E bit 1)
+        """
         badges = self.emu.read_u8(ADDR_BADGES)
 
         # Pokedex count
@@ -791,22 +802,52 @@ class RedBlueMemoryReader(GameMemoryReader):
         dex_owned = sum(owned_bits[:151])
         dex_seen = sum(seen_bits[:151])
 
-        # Story flags — some common checks
-        oak_parcel_byte = self.emu.read_u8(ADDR_OAK_PARCEL)
-        pokedex_byte = self.emu.read_u8(ADDR_POKEDEX_FLAG)
+        # Event flags (bag-independent)
+        event_flags_byte_oak = self.emu.read_u8(ADDR_OAK_PARCEL)    # 0xD74E
+        event_flags_byte_dex = self.emu.read_u8(ADDR_POKEDEX_FLAG)  # 0xD74B
+
+        event_got_oaks_parcel  = bool(event_flags_byte_oak & 0x02)  # flag 57, bit 1
+        event_oak_got_parcel   = bool(event_flags_byte_oak & 0x01)  # flag 56, bit 0
+        event_got_pokedex      = bool(event_flags_byte_dex & 0x20)  # flag 37, bit 5
+
+        # Actual bag-item presence (0x46 = 70 = "Oak's Parcel")
+        OAKS_PARCEL_ITEM_ID = 70
+        parcel_in_bag = self._bag_contains(OAKS_PARCEL_ITEM_ID)
+
+        # Derived state
+        has_oaks_parcel  = parcel_in_bag
+        parcel_delivered = event_oak_got_parcel and not parcel_in_bag
+        cp06_complete    = event_got_pokedex and event_oak_got_parcel and not parcel_in_bag
 
         gym_leaders_defeated = [
             BADGE_NAMES[i] for i in range(8) if badges & (1 << i)
         ]
 
         return {
-            "has_pokedex": bool(pokedex_byte & 0x20),
-            "has_oaks_parcel": bool(oak_parcel_byte & 0x02),
+            "has_pokedex": event_got_pokedex,
+            "has_oaks_parcel": has_oaks_parcel,
+            "parcel_in_bag": parcel_in_bag,
+            "event_got_oaks_parcel": event_got_oaks_parcel,
+            "event_oak_got_parcel": event_oak_got_parcel,
+            "parcel_delivered": parcel_delivered,
+            "cp06_complete": cp06_complete,
             "pokedex_owned": dex_owned,
             "pokedex_seen": dex_seen,
             "badges": gym_leaders_defeated,
             "badge_count": len(gym_leaders_defeated),
         }
+
+    def _bag_contains(self, item_id: int) -> bool:
+        """Check if a given item_id exists anywhere in the bag."""
+        count = self.emu.read_u8(ADDR_BAG_COUNT)
+        count = min(count, 20)
+        for i in range(count):
+            raw_id = self.emu.read_u8(ADDR_BAG_ITEMS + i * 2)
+            if raw_id == 0xFF:
+                break
+            if raw_id == item_id:
+                return True
+        return False
 
 
 # Alias used by server.py and README examples

@@ -1,0 +1,1 @@
+4a5eabc fix: generalize stale-dialog detection for all maps using wJoyIgnore bit 5
