@@ -200,20 +200,34 @@ class PyBoyEmulator(Emulator):
 
         Injects a vblank-interrupt pending flag (IF bit 0) before each
         sub-frame tick and forces the PPU/LCD pipeline by reading the
-        screen buffer after each tick.  PyBoy null-window mode does not
-        generate real vblank or STAT interrupts (no PPU scanlines), so
-        Gen 1 dialog/cutscene text cannot advance without these two steps.
+        screen buffer after each tick (only when the LCD is enabled).
+        PyBoy null-window mode does not generate real vblank or STAT
+        interrupts (no PPU scanlines), so Gen 1 dialog/cutscene text
+        cannot advance without these two steps.
+
+        The LCD-enable check (LCDC.7) prevents a renderer state corruption
+        during periods when the game briefly disables the LCD — for example
+        during battle attack animation transitions where the game switches
+        VRAM data. If ``screen.ndarray`` is read while the LCD is off, the
+        renderer produces a white frame and may fail to resume correctly
+        when the LCD is re-enabled (``battle_nullwindow_freeze``).
         """
         pb = self._pyboy
         for _ in range(frames):
             pb.memory[0xFF0F] = pb.memory[0xFF0F] | 0x01  # fake vblank
             pb.tick()  # type: ignore[union-attr]
-            # Force PPU pipeline by reading the screen buffer.  PyBoy
-            # null-window mode defers pixel computation until the screen
-            # buffer is accessed; without this read, LY (0xFF44) never
-            # increments, STAT (0xFF41) never fires, and the game's
-            # dialog/cutscene render loop hangs.
-            _ = pb.screen.ndarray
+            # Force PPU pipeline by reading the screen buffer, but only
+            # when the LCD is enabled.  PyBoy null-window mode defers
+            # pixel computation until the screen buffer is accessed;
+            # without this read, LY (0xFF44) never increments, STAT
+            # (0xFF41) never fires, and the game's dialog/cutscene
+            # render loop hangs.  Skipping the read while LCD is off
+            # avoids rendering white frames during VRAM-load transitions
+            # (e.g. battle attack animations) that would otherwise
+            # corrupt the PPU state.
+            lcdc = pb.memory[0xFF40]
+            if lcdc & 0x80:  # LCD enable bit 7
+                _ = pb.screen.ndarray
             self.frame_count += 1
 
     # -- video --------------------------------------------------------------
