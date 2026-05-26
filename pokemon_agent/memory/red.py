@@ -663,8 +663,16 @@ class RedBlueMemoryReader(GameMemoryReader):
     def read_battle(self) -> Dict[str, Any]:
         """Read battle state (whether in battle & enemy info).
 
-        Also attempts to read the battle menu cursor position when the
-        menu is visible (battle active AND no dialog text scrolling).
+        Distinguishes two phases:
+          - "intro_or_text" — wild-intro text is still displayed; cursor
+            / enemy data may be transitional and is marked untrusted.
+          - "main_menu"     — the four-option battle menu (FIGHT/PKMN/ITEM
+            /RUN) is confirmed visible; cursor & enemy data are trusted.
+
+        Phase detection uses ``wJoyIgnore`` bit 5 (dialog active) as the
+        primary indicator and ``wTextBoxID`` as a secondary check: values
+        0 or 1 correspond to the main battle menu; higher values indicate
+        other text boxes (intro, item, etc.) or stale state.
         """
         battle_type = self.emu.read_u8(ADDR_BATTLE_TYPE)
         type_name = {0: "none", 1: "wild", 2: "trainer"}.get(battle_type, f"unknown({battle_type})")
@@ -673,7 +681,22 @@ class RedBlueMemoryReader(GameMemoryReader):
             "type": type_name,
         }
         if battle_type != 0:
-            # read first enemy mon (simplified)
+            # --- phase detection ---
+            joy_ignore = self.emu.read_u8(ADDR_JOY_IGNORE)
+            text_box_id = self.emu.read_u8(ADDR_TEXT_BOX_ID)
+            in_dialog = bool(joy_ignore & 0x20)
+
+            # Main battle menu is confirmed when:
+            #   1. No dialog active (joy_ignore bit 5 = 0), AND
+            #   2. Text box ID is 0 (no box) or 1 (main menu box).
+            #   2. Larger IDs (13 etc.) indicate stale text or sub-menus.
+            main_menu_visible = (not in_dialog) and (text_box_id in (0, 1))
+
+            battle_phase = "main_menu" if main_menu_visible else "intro_or_text"
+            result["battle_phase"] = battle_phase
+            result["battle_menu_visible"] = main_menu_visible
+
+            # --- raw enemy data (always read, trust gated below) ---
             enemy_species = self.emu.read_u8(ADDR_ENEMY_SPECIES)
             enemy_data = self.emu.read_range(ADDR_ENEMY_DATA, PARTY_MON_SIZE)
             enemy_level = enemy_data[33] if len(enemy_data) > 33 else enemy_data[3]
@@ -697,19 +720,16 @@ class RedBlueMemoryReader(GameMemoryReader):
                 "moves": moves,
             }
 
-            # -- battle menu cursor detection --
-            # Menu is visible when battle active AND no dialog text scrolling.
-            joy_ignore = self.emu.read_u8(ADDR_JOY_IGNORE)
-            dialog_active = bool(joy_ignore & 0x20)
-            result["battle_menu_visible"] = not dialog_active
+            # --- trust gates ---
+            if battle_phase == "main_menu":
+                result["enemy_species_trusted"] = True
+                result["enemy_hp_trusted"] = True
+            else:
+                result["enemy_species_trusted"] = False
+                result["enemy_hp_trusted"] = False
 
-            if not dialog_active:
-                # Read the linear cursor position index at 0xCC26 (wMenuCursorPosition).
-                # Gen1 battle menu is 2x2 grid (FIGHT/PKMN/ITEM/RUN).
-                # Empirical testing on Red (USA Rev A) confirmed 0xCC26 uses
-                # COLUMN-MAJOR (not row-major) ordering:
-                #   0 = FIGHT (top-left),    1 = ITEM (bottom-left)
-                #   2 = PKMN (top-right),   3 = RUN  (bottom-right)
+            # --- battle cursor ---
+            if battle_phase == "main_menu":
                 cur_pos = self.emu.read_u8(ADDR_MENU_CURSOR_POS) & 0xFF
                 if cur_pos == 0:
                     result["battle_cursor"] = "fight"
@@ -721,8 +741,10 @@ class RedBlueMemoryReader(GameMemoryReader):
                     result["battle_cursor"] = "run"
                 else:
                     result["battle_cursor"] = "unknown"
+                result["battle_cursor_trusted"] = True
             else:
                 result["battle_cursor"] = "unknown"
+                result["battle_cursor_trusted"] = False
         return result
 
     def read_dialog(self) -> Dict[str, Any]:
