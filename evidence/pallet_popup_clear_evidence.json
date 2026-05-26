@@ -1,0 +1,37 @@
+{
+  "checkpoint": "pallet_popup_clear",
+  "timestamp": "2026-05-26T01:17:45.371816Z",
+  "success_confirmed": true,
+  "gap": null,
+  "fix": {
+    "type": "generalized_stale_dialog_detection",
+    "rationale": "wJoyIgnore ($D730) bit 5 is the authoritative Gen 1 engine flag for 'being used for text/menu'. The old condition used (text_box != 0 OR joy_ignore & 0x20), but wTextBoxID (0xD125) retains stale values after warp/dialog-end. Now only joy_ignore bit 5 is used.",
+    "files_changed": [
+      "pokemon_agent/memory/red.py"
+    ],
+    "commit_message": "fix: generalize stale-dialog detection for all maps using wJoyIgnore bit 5"
+  },
+  "state": {
+    "frame": 60,
+    "keys": [],
+    "map_id": 0,
+    "map_name": "Pallet Town",
+    "x": 12,
+    "y": 12,
+    "facing": "down",
+    "dialog_active": false,
+    "dialog_text_box_id": 13,
+    "dialog_joy_ignore": 0,
+    "dialog_text": "POK<BA><7F>BALL",
+    "battle": false,
+    "party0_species": "Squirtle",
+    "party0_raw_id": 177
+  },
+  "gates": {
+    "official_pokemon_agent_gate": "pass",
+    "color_mode_gate": "pass",
+    "model_gate": "pass",
+    "stale_dialog_detected": true,
+    "stale_dialog_fixed": true
+  }
+}
