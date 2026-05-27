@@ -1,0 +1,127 @@
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/conftest.py:145:    pyboy = PyBoy(default_rom, window="null", symbols="extras/default_rom/default_rom.sym")
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/conftest.py:146:    pyboy_cgb = PyBoy(default_rom_cgb, window="null", symbols="extras/default_rom/default_rom_cgb.sym")
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/conftest.py:152:        return PyBoy(filename, *args, window="null", **kwargs)
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/conftest.py:169:        pyboy.tick(10)  # Just a few to get the logo up
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/conftest.py:273:        # Inspired by doctest.testfile; ideally we would use it directly,
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/__main__.py:60:parser.add_argument("--no-input", action="store_true", help="Disable all user-input (mostly for autonomous testing)")
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/__main__.py:90:        "Load state from file. If filepath is specified, it will load the given path. Otherwise, it will automatically "
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/__main__.py:103:parser.add_argument("--no-renderer", action="store_true", help="Disable rendering (internal use)")
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/__main__.py:110:gameboy_type_parser = parser.add_mutually_exclusive_group()
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/__main__.py:127:sound_parser = parser.add_mutually_exclusive_group()
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/__main__.py:206:    kwargs.pop("no_renderer", None)
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/__main__.py:221:    while pyboy.tick():
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:94:        window=defaults["window"],
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:119:        Only the `gamerom` argument is required.
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:122:        automatically next to the game ROM. If this is not wanted, provide a file-like object as argument.
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:128:        ...     pyboy.tick()
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:141:            * scale (int): Window scale factor. Doesn't apply to API.
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:148:            * gameshark (str): GameShark codes to apply.
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:149:            * no_input (bool): Disable all user-input (mostly for autonomous testing)
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:151:            * color_palette (tuple): Specify the color palette to use for rendering.
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:152:            * cgb_color_palette (list of tuple): Specify the color palette to use for rendering in CGB-mode for non-color games.
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:177:        if "window_type" in kwargs:
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:179:                "Deprecated use of 'window_type'. Use 'window' keyword argument instead. https://github.com/Baekalfen/PyBoy/wiki/Migrating-from-v1.x.x-to-v2.0.0"
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:181:            window = kwargs.pop("window_type")
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:264:        finally:
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:291:        self.avg_tick = 0
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:375:        The register file is best used inside the callback of a hook, as `PyBoy.tick` doesn't return at a specific point.
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:384:        >>> pyboy.tick(70)
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:403:        ...     pyboy.tick(1, True) # Progress the game to change score
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:408:        >>> print(addresses) # If repeated enough, only one address will remain
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:464:        The title stored on the currently loaded cartridge ROM. The title is all upper-case ASCII and may
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:529:    def _tick(self, render, sound):
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:535:            self.gameshark.tick()
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:537:            self.mb.lcd.disable_renderer = not render
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:540:            # Reenter mb.tick until we eventually get a clean exit without breakpoints
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:541:            while self.mb.tick() and (not self.quitting):
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:543:                # NOTE: Potentially reinject breakpoint that we have now stepped passed
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:568:    def tick(self, count=1, render=True, sound=True):
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:573:        This function will block for roughly 16,67ms per frame, to not run faster than real-time, unless you specify
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:579:        Setting `render` to `True` will make PyBoy render the screen for *the last frame* of this tick. This can be seen
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:583:        substantially. While setting `render` to `False`, you can still access the `PyBoy.game_area` to get a simpler
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:586:        If `render` was enabled, use `pyboy.api.screen.Screen` to get a NumPy buffer or raw memory buffer.
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:590:        >>> pyboy.tick() # Progress 1 frame with rendering
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:592:        >>> pyboy.tick(1) # Progress 1 frame with rendering
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:594:        >>> pyboy.tick(60, False) # Progress 60 frames *without* rendering
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:596:        >>> pyboy.tick(60, True) # Progress 60 frames and render *only the last frame*
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:598:        >>> for _ in range(60): # Progress 60 frames and render every frame
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:599:        ...     if not pyboy.tick(1, True):
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:605:            count (int): Number of ticks to process
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:606:            render (bool): Whether to render an image for this tick
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:618:                # Only render screen and sample sound on last tick to improve performance
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:619:                _render = render and count == 1
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:621:                running = self._tick(_render, _sound)
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:623:        t_tick = time.perf_counter_ns()
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:624:        self._post_tick()
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:628:            nsecs = t_tick - t_start
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:629:            self.avg_tick = 0.9 * (self.avg_tick / _count) + (0.1 * nsecs / 1_000_000_000)
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:646:            # This feeds events into the tick-loop from the window. There might already be events in the list from the API.
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:683:                self._plugin_manager._post_tick_windows()
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:708:    def _post_tick(self):
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:711:        if self.screen.image and not self.screen.image.readonly:
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:716:        self._plugin_manager.post_tick()
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:720:        # Prepare an empty list, as the API might be used to send in events between ticks
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:728:            self.window_title = f"CPU/frame: {(self.avg_tick) / SPF * 100:0.2f}%"
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:751:        Gently stops the emulator and all sub-modules.
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:803:        The button will automatically be released at the following call to `PyBoy.tick`.
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:807:        >>> pyboy.button('a') # Press button 'a' and release after `pyboy.tick()`
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:808:        >>> pyboy.tick() # Button 'a' pressed
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:810:        >>> pyboy.tick() # Button 'a' released
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:812:        >>> pyboy.button('a', 3) # Press button 'a' and release after 3 `pyboy.tick()`
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:813:        >>> pyboy.tick() # Button 'a' pressed
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:815:        >>> pyboy.tick() # Button 'a' still pressed
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:817:        >>> pyboy.tick() # Button 'a' still pressed
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:819:        >>> pyboy.tick() # Button 'a' released
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:859:        The button will remain press until explicitly released with `PyBoy.button_release` or `PyBoy.send_input`.
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:863:        >>> pyboy.button_press('a') # Press button 'a' and keep pressed after `PyBoy.tick()`
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:864:        >>> pyboy.tick() # Button 'a' pressed
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:866:        >>> pyboy.tick() # Button 'a' still pressed
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:868:        >>> pyboy.button_release('a') # Release button 'a' on next call to `PyBoy.tick()`
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:869:        >>> pyboy.tick() # Button 'a' released
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:906:        >>> pyboy.button_press('a') # Press button 'a' and keep pressed after `PyBoy.tick()`
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:907:        >>> pyboy.tick() # Button 'a' pressed
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:909:        >>> pyboy.tick() # Button 'a' still pressed
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:911:        >>> pyboy.button_release('a') # Release button 'a' on next call to `PyBoy.tick()`
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:912:        >>> pyboy.tick() # Button 'a' released
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:950:        >>> pyboy.send_input(WindowEvent.PRESS_BUTTON_A) # Press button 'a' and keep pressed after `PyBoy.tick()`
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:951:        >>> pyboy.tick() # Button 'a' pressed
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:953:        >>> pyboy.tick() # Button 'a' still pressed
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:955:        >>> pyboy.send_input(WindowEvent.RELEASE_BUTTON_A) # Release button 'a' on next call to `PyBoy.tick()`
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:956:        >>> pyboy.tick() # Button 'a' released
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:963:        >>> pyboy.send_input(WindowEvent.PRESS_BUTTON_A) # Press button 'a' and keep pressed after `PyBoy.tick()`
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:964:        >>> pyboy.send_input(WindowEvent.RELEASE_BUTTON_A, 2) # Release button 'a' on third call to `PyBoy.tick()`
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:965:        >>> pyboy.tick() # Button 'a' pressed
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:967:        >>> pyboy.tick() # Button 'a' still pressed
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:969:        >>> pyboy.tick() # Button 'a' released
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:975:            delay (int): 0 for immediately, number of frames to delay the input
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:980:                raise PyBoyInvalidInputException("Only positive integers allowed")
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:1120:        Some game wrappers will supply mappings as well. See the specific documentation for your game wrapper:
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:1173:        `pyboy.PyBoy.game_area_mapping`. Either you'll have to supply your own mapping, or you can find one
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:1194:            raise PyBoyInvalidOperationException("Palette change is only available in DMG mode")
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:1224:        >>> pyboy.tick() # Delays 16.67ms
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:1227:        >>> pyboy.tick() # As fast as possible
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:1300:        >>> # Directly
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:1331:        >>> pyboy.tick(70)
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:1337:        If a symbol file is loaded, this function can also automatically resolve a bank and address from a symbol. To
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:1347:        >>> pyboy.tick(81)
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:1378:        Remove a previously registered hook from a specific bank and memory address.
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:1533:            enable (bool): True to lock RTC, False to operate normally
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:1546:    This class cannot be used directly, but is accessed through `PyBoy.register_file`.
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:1549:    hook, as `PyBoy.tick` doesn't return at a specific point.
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:1564:    >>> pyboy.tick(120)
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:1648:    This class cannot be used directly, but is accessed through `PyBoy.memory`.
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:1664:    If you're developing a bot or AI with this API, you're most likely going to be using read the most. This is how you
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:1665:    would efficiently read the score, time, coins, positions etc. in a game's memory.
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:1685:    isn't directly accessible, and can be hidden through "memory banking". This means that the same address range
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:1688:    If you want to change an address in the ROM, then look at override below. Issuing writes to the ROM area actually
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:1701:    >>> # Game Boy Color (CGB) only:
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:1715:    _NOTE_: Any changes here are not saved or loaded to game states! Use this function with caution and reapply
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:1841:                    raise PyBoyInvalidInputException("Selecting bank of VRAM is only supported for CGB mode")
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:1886:                    raise PyBoyInvalidInputException("Selecting bank of WRAM is only supported for CGB mode")
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:1943:                __NOTE__: Any changes here are not saved or loaded to game states! Use this function with caution and reapply
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:2000:                    raise PyBoyInvalidInputException("Selecting bank of VRAM is only supported for CGB mode")
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/pyboy.py:2063:                    raise PyBoyInvalidInputException("Selecting bank of WRAM is only supported for CGB mode")
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/utils.py:25:INTR_VBLANK, INTR_LCDC, INTR_TIMER, INTR_SERIAL, INTR_HIGHTOLOW = [1 << x for x in range(5)]
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/utils.py:298:# Temporarily placed here to not be exposed on public API
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/utils.py:464:        byteorder (str): The endian type to use. This is only used for 16-bit values and higher. See [int.from_bytes](https://docs.python.org/3/library/stdtypes.html#int.from_bytes) for more details.
+/home/oreki/pokemon-agent/.venv/lib/python3.13/site-packages/pyboy/utils.py:496:        byteorder (str): The endian type to use. This is only used for 16-bit values and higher. See [int.to_bytes](https://docs.python.org/3/library/stdtypes.html#int.to_bytes) for more details.

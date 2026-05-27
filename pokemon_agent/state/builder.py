@@ -53,6 +53,7 @@ def build_game_state(
         "dialog": reader.read_dialog,
         "map": reader.read_map_info,
         "flags": reader.read_flags,
+        "forest_debug": reader.read_forest_debug,
     }
 
     for key, fn in sections.items():

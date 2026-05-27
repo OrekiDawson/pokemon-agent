@@ -32,6 +32,21 @@ ADDR_MAP_Y         = 0xD361   # player Y on map  (wYCoord)
 ADDR_MAP_X         = 0xD362   # player X on map  (wXCoord)
 ADDR_MAP_BANK      = 0xD35E   # same byte is map id
 ADDR_FACING        = 0xC109   # sprite facing   (wSpritePlayerStateData1FacingDirection: 0=down,4=up,8=left,0xC=right)
+# -- Tile collision (Gen 1 WRAM) --
+ADDR_TILE_STANDING_ON = 0xD365  # wTilePlayerStandingOn
+ADDR_TILE_IN_FRONT    = 0xD366  # wTileInFrontOfPlayer
+ADDR_CUR_MAP_TILESET  = 0xD367  # wCurMapTileset
+ADDR_CUR_MAP_HEIGHT    = 0xD368  # wCurMapHeight
+ADDR_CUR_MAP_WIDTH     = 0xD369  # wCurMapWidth
+ADDR_CUR_MAP_DATA_PTR  = 0xD36A  # wCurMapDataPtr (2 bytes LE)
+ADDR_CUR_MAP_TEXT_PTR  = 0xD36C  # wCurMapTextPtr (2 bytes LE)
+ADDR_TILESET_GFX_PTR   = 0xD52B  # wTilesetGfxPtr (2 bytes LE)
+ADDR_TILESET_COLL_PTR  = 0xD52D  # wTilesetCollisionPtr (2 bytes LE — UNRELIABLE, use COLLISION_TABLE_LOOKUP instead)
+# wTilesetTalkingOverTiles at 0xD52F (3 bytes)
+# Next: wGrassTile, then PC items at 0xD53A+
+# -- Warp data (WRAM bank 0) --
+ADDR_NUM_WARPS          = 0xD3AB  # wNumberOfWarps (1 byte)
+ADDR_WARP_ENTRIES       = 0xD3AC  # wWarpEntries (MAX_WARP_EVENTS*4 = 128 bytes); each entry: Y, X, warp_id, map_id
 # Note: 0xD367 (wPlayerDirection) retains the direction from map entry; 
 # 0xC109 is the live sprite state that updates as the player moves.
 
@@ -479,6 +494,52 @@ FACING_NAMES: Dict[int, str] = {
     0x0C: "right",
 }
 
+# Gen 1 tileset IDs (from pokered/constants/tileset_constants.asm)
+TILESET_NAMES: Dict[int, str] = {
+    0: "OVERWORLD",
+    1: "REDS_HOUSE",
+    2: "MART",
+    3: "FOREST",
+    4: "POKECENTER",
+    5: "GYM",
+    6: "HOUSE",
+    7: "GATE",
+    8: "PORT",
+    9: "LAB",
+    10: "LOBBY",
+    11: "SHIP",
+    12: "SHIP_PORT",
+    13: "CAVE",
+    14: "CEMETERY",
+    15: "INTERIOR",
+    16: "PLATEAU",
+}
+
+# Collision passable-tile list addresses in ROM bank 0 (always-mapped 0x0000-0x3FFF).
+# Key = tileset_id, value = GB address of the $ff-terminated passable tile list.
+# Extracted from pokered/data/tilesets/collision_tile_ids.asm by scanning the
+# compiled PokemonRed.gb ROM.
+# NOTE: 0x0000 sentinel means "no collision table found for this tileset".
+TILESET_COLLISION_ADDR: Dict[int, int] = {
+    0: 0x1735,   # OVERWORLD
+    1: 0x1749,   # REDS_HOUSE
+    2: 0x1753,   # MART          (Mart_Coll, shared with Pokecenter)
+    3: 0x1765,   # FOREST        (Forest_Coll)
+    4: 0x1753,   # POKECENTER    (Pokecenter_Coll, shared with Mart)
+    5: 0x1759,   # GYM           (Gym_Coll, shared with Dojo)
+    6: 0x1775,   # HOUSE
+    7: 0x177F,   # GATE          (Gate_Coll, shared with ForestGate/Museum)
+    8: 0x1795,   # PORT          (ShipPort_Coll)
+    9: 0x17CA,   # LAB
+   10: 0x17B8,   # LOBBY
+   11: 0x178A,   # SHIP
+   12: 0x1795,   # SHIP_PORT     (ShipPort_Coll, same as PORT)
+   13: 0x17AC,   # CAVE          (Cavern_Coll)
+   14: 0x179A,   # CEMETERY
+   15: 0x17A2,   # INTERIOR
+   16: 0x17F0,   # PLATEAU
+}
+
 BADGE_NAMES = [
     "Boulder", "Cascade", "Thunder", "Rainbow",
     "Soul", "Marsh", "Volcano", "Earth",
@@ -891,6 +952,117 @@ class RedBlueMemoryReader(GameMemoryReader):
             "pokedex_seen": dex_seen,
             "badges": gym_leaders_defeated,
             "badge_count": len(gym_leaders_defeated),
+        }
+
+    def read_forest_debug(self) -> Dict[str, Any]:
+        """Read tile collision debug fields for forest/overworld navigation.
+
+        Returns raw tile IDs from Gen 1 WRAM (wTilePlayerStandingOn,
+        wTileInFrontOfPlayer) plus the front_coord, tileset info, and
+        runtime collision passability.
+
+        # collision_passable_by_runtime_table uses wTilesetCollisionPtr
+        # (a pointer to a **list of passable tile IDs** terminated by $ff).
+        # Gen 1's CheckTilePassable iterates this list — if tile_in_front
+        # matches any entry, carry=clear (passable).  If $ff reached,
+        # carry=set (blocked).  This matches the actual CheckTilePassable
+        # in pokered/home/overworld.asm.
+        """
+        map_id = self.emu.read_u8(ADDR_MAP_ID)
+        map_x = self.emu.read_u8(ADDR_MAP_X)
+        map_y = self.emu.read_u8(ADDR_MAP_Y)
+        facing_byte = self.emu.read_u8(ADDR_FACING)
+        facing = FACING_NAMES.get(facing_byte, f"unknown(0x{facing_byte:02X})")
+
+        tile_under = self.emu.read_u8(ADDR_TILE_STANDING_ON)
+        tile_front = self.emu.read_u8(ADDR_TILE_IN_FRONT)
+        tileset_id = self.emu.read_u8(ADDR_CUR_MAP_TILESET)
+        map_name = MAP_NAMES.get(map_id, f"Unknown Map ({map_id})")
+        tileset_name = TILESET_NAMES.get(tileset_id, f"unknown(0x{tileset_id:02X})")
+
+        # Collision: look up passable tile list from ROM bank 0 by tileset_id.
+        # This is RELIABLE (ROM bank 0 is always mapped) whereas wTilesetCollisionPtr
+        # in WRAM is often stale or bank-switched.
+        # Gen 1 CheckTilePassable iterates this list looking for tile_in_front.
+        coll_addr = TILESET_COLLISION_ADDR.get(tileset_id, 0)
+        coll_passable = None
+        tile_front_coll_byte = None
+        tile_under_coll_byte = None
+        coll_tile_list = None
+        if coll_addr and coll_addr != 0:
+            try:
+                max_scan = 64
+                passable_tiles = []
+                for off in range(max_scan):
+                    tid = self.emu.read_u8(coll_addr + off)
+                    if tid == 0xFF:
+                        break
+                    passable_tiles.append(tid)
+                coll_passable = tile_front in passable_tiles
+                # Raw bytes at the tile index (for comparison)
+                tile_front_coll_byte = self.emu.read_u8(coll_addr + tile_front) if tile_front < max_scan else None
+                tile_under_coll_byte = self.emu.read_u8(coll_addr + tile_under) if tile_under < max_scan else None
+                coll_tile_list = [f"0x{t:02X}" for t in passable_tiles]
+            except Exception:
+                pass
+
+        # Also read wTilesetCollisionPtr for comparison (may be stale)
+        wram_coll_ptr = self.emu.read_u16(ADDR_TILESET_COLL_PTR)
+
+        # Calculate front_coord the same way Gen 1 does screen->map
+        dx, dy = 0, 0
+        if facing == "down":
+            dy = 1
+        elif facing == "up":
+            dy = -1
+        elif facing == "left":
+            dx = -1
+        elif facing == "right":
+            dx = 1
+        front_coord = [map_x + dx, map_y + dy]
+
+        # Warp data from wWarpEntries in WRAM
+        num_warps = self.emu.read_u8(ADDR_NUM_WARPS)
+        warp_under_player = None
+        nearest_warps = []
+        if num_warps and num_warps < 33:
+            for i in range(num_warps):
+                base = ADDR_WARP_ENTRIES + i * 4
+                wy = self.emu.read_u8(base)      # Y coord of warp
+                wx = self.emu.read_u8(base + 1)  # X coord of warp
+                wid = self.emu.read_u8(base + 2) # warp ID (destination index)
+                wmap = self.emu.read_u8(base + 3)# destination map ID
+                entry = {"y": wy, "x": wx, "warp_id": wid, "dest_map_id": wmap}
+                # Check if player is on this warp
+                if wy == map_y and wx == map_x:
+                    warp_under_player = entry
+                # Check if within 2 tiles
+                if abs(wy - map_y) <= 2 and abs(wx - map_x) <= 2:
+                    nearest_warps.append(entry)
+                # Otherwise not near enough to report
+
+        return {
+            "map": map_name,
+            "map_id": map_id,
+            "x": map_x,
+            "y": map_y,
+            "facing": facing,
+            "tile_under_player": f"0x{tile_under:02X}",
+            "tile_under_player_raw": tile_under,
+            "tile_in_front": f"0x{tile_front:02X}",
+            "tile_in_front_raw": tile_front,
+            "front_coord": front_coord,
+            "tileset": tileset_name,
+            "tileset_id": tileset_id,
+            "collision_addr": f"0x{coll_addr:04X}" if coll_addr else None,
+            "wram_coll_ptr": f"0x{wram_coll_ptr:04X}" if wram_coll_ptr else None,
+            "coll_tile_list": coll_tile_list if coll_addr else None,
+            "tile_front_coll_byte": f"0x{tile_front_coll_byte:02X}" if tile_front_coll_byte is not None else None,
+            "tile_under_coll_byte": f"0x{tile_under_coll_byte:02X}" if tile_under_coll_byte is not None else None,
+            "collision_passable_by_runtime_table": coll_passable,
+            "num_warps": num_warps,
+            "warp_under_player": warp_under_player,
+            "nearest_warps": nearest_warps,
         }
 
     def _bag_contains(self, item_id: int) -> bool:
