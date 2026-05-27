@@ -40,6 +40,7 @@ ADDR_CUR_MAP_HEIGHT    = 0xD368  # wCurMapHeight
 ADDR_CUR_MAP_WIDTH     = 0xD369  # wCurMapWidth
 ADDR_CUR_MAP_DATA_PTR  = 0xD36A  # wCurMapDataPtr (2 bytes LE)
 ADDR_CUR_MAP_TEXT_PTR  = 0xD36C  # wCurMapTextPtr (2 bytes LE)
+ADDR_OVERWORLD_MAP_BASE = 0xC4A0  # wOverworldMap (block ID buffer in WRAM, with 3-block border for map connections)
 ADDR_TILESET_GFX_PTR   = 0xD52B  # wTilesetGfxPtr (2 bytes LE)
 ADDR_TILESET_COLL_PTR  = 0xD52D  # wTilesetCollisionPtr (2 bytes LE — UNRELIABLE, use COLLISION_TABLE_LOOKUP instead)
 # wTilesetTalkingOverTiles at 0xD52F (3 bytes)
@@ -1112,12 +1113,108 @@ class RedBlueMemoryReader(GameMemoryReader):
             forest_debug_valid = False
             gap = "map_tileset_parser_gap"
 
+        # --- Adjacent tile oracle (read from wOverworldMap block buffer) ---
+        # Gen1 wOverworldMap at 0xC4A0 stores block IDs (2×2 metatiles).
+        # wCurMapWidth/wCurMapHeight are in **blocks**, not tiles.
+        # Player tile coords (map_x, map_y) must be halved to get block coords.
+        # MAP_BORDER=3 per pokered/constants/map_data_constants.asm.
+        # offset = (MAP_BORDER + block_y) * (map_width_blocks + 2*MAP_BORDER) + (MAP_BORDER + block_x)
+        adjacent = {}
+        MAP_BORDER = 3
+        walk_grid_tile_w = 0
+        walk_grid_tile_h = 0
+        try:
+            map_width_blocks = self.emu.read_u8(ADDR_CUR_MAP_WIDTH)   # 0xD369, in blocks
+            map_height_blocks = self.emu.read_u8(ADDR_CUR_MAP_HEIGHT)  # 0xD368, in blocks
+            walk_grid_tile_w = map_width_blocks * 2   # 34 for Viridian Forest
+            walk_grid_tile_h = map_height_blocks * 2  # 48 for Viridian Forest
+            buf_width = map_width_blocks + 2 * MAP_BORDER  # = map_width_blocks + 6
+            buf_base = ADDR_OVERWORLD_MAP_BASE  # 0xC4A0
+
+            # Ensure passable_tiles is defined (may be unbound if coll_addr was None)
+            passable_tiles_default: list = []
+            if coll_tile_list:
+                try:
+                    passable_tiles_default = passable_tiles  # type: ignore
+                except NameError:
+                    pass
+            local_passable = passable_tiles_default
+
+            def _block_at(self_obj, bx, by):
+                """Read block ID at block-level coordinates (bx, by)."""
+                off = (MAP_BORDER + by) * buf_width + (MAP_BORDER + bx)
+                return self_obj.emu.read_u8(buf_base + off)
+
+            # Ensure local_passable is accessible in closure
+            _local_passable = local_passable
+
+            def _check_adjacent(dname, dx, dy):
+                """Check tile (dx,dy) adjacent to player tile (map_x,map_y)."""
+                tile_x = map_x + dx
+                tile_y = map_y + dy
+                # Bounds check against the walk grid (tile-level)
+                if tile_x < 0 or tile_x >= walk_grid_tile_w or tile_y < 0 or tile_y >= walk_grid_tile_h:
+                    return {
+                        "coord": [tile_x, tile_y],
+                        "in_bounds": False,
+                        "classification": "out_of_walk_grid",
+                        "passable": False,
+                        "passable_heuristic": False,
+                    }
+                # Downsample tile coords to block coords
+                block_x = tile_x // 2
+                block_y = tile_y // 2
+                block_id = _block_at(self, block_x, block_y)
+                ph = block_id in _local_passable or block_id < 0x10
+                return {
+                    "coord": [tile_x, tile_y],
+                    "block_coord": [block_x, block_y],
+                    "in_bounds": True,
+                    "block_id": f"0x{block_id:02X}",
+                    "block_id_raw": block_id,
+                    "passable_heuristic": ph,
+                    # Only also store tile-level for up direction override
+                }
+
+            directions = [
+                ("up", 0, -1),
+                ("down", 0, 1),
+                ("left", -1, 0),
+                ("right", 1, 0),
+            ]
+            for dname, dx, dy in directions:
+                adjacent[dname] = _check_adjacent(dname, dx, dy)
+            # Override up-direction with the actual runtime tile_in_front for precision
+            if adjacent.get("up", {}).get("in_bounds", False):
+                adjacent["up"]["tile_in_front_raw"] = tile_front
+                adjacent["up"]["tile_in_front"] = f"0x{tile_front:02X}"
+                adjacent["up"]["collision_passable"] = coll_passable
+        except Exception:
+            adjacent = None
+
+        # Compute layered coordinate fields
+        player_block_coord = [map_x // 2, map_y // 2] if map_x is not None else None
+        coord_layers = {
+            "coord_layer": "player_tile_coord",
+            "player_coord": [map_x, map_y],
+            "player_block_coord": player_block_coord,
+            "map_blocks": [map_width_blocks, map_height_blocks] if 'map_width_blocks' in dir() and map_width_blocks else None,
+            "walk_grid_tile_size": [walk_grid_tile_w, walk_grid_tile_h] if walk_grid_tile_w > 0 else None,
+            "source_bst_tile_grid_size": [walk_grid_tile_w * 2, walk_grid_tile_h * 2] if walk_grid_tile_w > 0 else None,
+            "viewport_buffer_border_blocks": MAP_BORDER,
+            "viewport_buffer_size_blocks": [buf_width, map_height_blocks + 2 * MAP_BORDER] if 'map_height_blocks' in dir() and map_height_blocks else None,
+            "tile_lookup_method": "wOverworldMap_block_buffer_tile_to_block_downsample",
+            "full_map_lookup_used": False,
+            "viewport_lookup_used": True,
+        }
+
         return {
             "map": map_name,
             "map_id": map_id,
             "x": map_x,
             "y": map_y,
             "facing": facing,
+            **coord_layers,
             "tile_under_player": f"0x{tile_under:02X}",
             "tile_under_player_raw": tile_under,
             "tile_in_front": f"0x{tile_front:02X}",
@@ -1146,6 +1243,9 @@ class RedBlueMemoryReader(GameMemoryReader):
             "map_tileset_consistent": map_tileset_consistent,
             "forest_debug_valid": forest_debug_valid,
             "forest_debug_gap": gap,
+            "map_width_blocks": map_width_blocks if 'map_width_blocks' in dir() and map_width_blocks else None,
+            "map_height_blocks": map_height_blocks if 'map_height_blocks' in dir() and map_height_blocks else None,
+            "adjacent": adjacent,
         }
 
     def _bag_contains(self, item_id: int) -> bool:
