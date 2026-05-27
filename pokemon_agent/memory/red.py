@@ -11,6 +11,8 @@ Gen 1 text uses a custom character encoding (0x50 = terminator,
 from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
+import struct
+import os
 
 from pokemon_agent.emulator import Emulator
 from pokemon_agent.memory.reader import GameMemoryReader
@@ -1133,8 +1135,44 @@ class RedBlueMemoryReader(GameMemoryReader):
             buf_width = map_width_blocks + 2 * MAP_BORDER  # = map_width_blocks + 6
             buf_base = ADDR_OVERWORLD_MAP_BASE  # 0xC4A0
 
-            # Read tileset block data pointer for block→tile decomposition
-            blocks_ptr = self.emu.read_u16(ADDR_TILESET_BLOCKS_PTR)
+            # Keep WRAM TilesetBlocksPtr for diagnostic only (stale after savestate)
+            wram_blocks_ptr = self.emu.read_u16(ADDR_TILESET_BLOCKS_PTR)
+
+            # Load block→tile decomposition from ROM Tilesets table (0xC7BE).
+            # Gen 1 loads the Tilesets table at startup.  After savestate reload,
+            # wTilesetBlocksPtr (0xD529) becomes stale, but the ROM data is always
+            # correct.  The Tilesets table is at ROM file offset 0xC7BE, 24 entries
+            # × 12 bytes, each entry: [bank(1), block_ptr(2), gfx_ptr(2), coll_ptr(2), ...].
+            tileset_block_table: Optional[Dict[int, List[int]]] = None
+            try:
+                rom_path = getattr(self.emu, 'rom_path', None)
+                if rom_path and os.path.isfile(rom_path):
+                    with open(rom_path, 'rb') as _rom_f:
+                        _rom_f.seek(0xC7BE + tileset_id * 12)
+                        _hdr = _rom_f.read(12)
+                        _bank = _hdr[0]
+                        _ptr = struct.unpack('<H', _hdr[1:3])[0]
+                        # Calculate file offset: bank*0x4000 + (ptr-0x4000) if ptr >= 0x4000
+                        if _ptr >= 0x4000:
+                            _file_off = _bank * 0x4000 + (_ptr - 0x4000)
+                        else:
+                            _file_off = _ptr
+                        # Read the block table (each block = 4 bytes)
+                        _MAX_BLOCKS = 280  # covers all Gen 1 tilesets
+                        _rom_f.seek(_file_off)
+                        _block_raw = _rom_f.read(_MAX_BLOCKS * 4)
+                        _tbl: Dict[int, List[int]] = {}
+                        for _bid in range(len(_block_raw) // 4):
+                            _bo = _bid * 4
+                            _tbl[_bid] = [
+                                _block_raw[_bo],
+                                _block_raw[_bo + 1],
+                                _block_raw[_bo + 2],
+                                _block_raw[_bo + 3],
+                            ]
+                        tileset_block_table = _tbl
+            except Exception:
+                tileset_block_table = None
 
             # Ensure passable_tiles is defined (may be unbound if coll_addr was None)
             passable_tiles_default: list = []
@@ -1151,19 +1189,26 @@ class RedBlueMemoryReader(GameMemoryReader):
                 return self_obj.emu.read_u8(buf_base + off)
 
             def _decompose_tile(self_obj, block_id, subtile_x, subtile_y):
-                """Decompose a 2×2 block into its 4 tile IDs using tileset block data.
+                """Decompose a 2×2 block into its 4 tile IDs using ROM tileset block data.
                 
+                Uses the ROM Tilesets table (loaded above).  Falls back to WRAM
+                wTilesetBlocksPtr (stale after savestate) only for comparison.
                 Each block = 4 bytes: [TL, TR, BL, BR] tile IDs.
                 subtile_x=0, subtile_y=0 → TL, (1,0) → TR, (0,1) → BL, (1,1) → BR
                 """
-                if not blocks_ptr or blocks_ptr == 0:
-                    return None
-                try:
-                    entry = blocks_ptr + block_id * 4
+                if tileset_block_table is not None and block_id in tileset_block_table:
+                    tiles = tileset_block_table[block_id]
                     tile_index = subtile_y * 2 + subtile_x
-                    return self_obj.emu.read_u8(entry + tile_index)
-                except Exception:
-                    return None
+                    return tiles[tile_index]
+                # Fallback: WRAM pointer (may be stale — for diagnostic only)
+                if wram_blocks_ptr and wram_blocks_ptr != 0:
+                    try:
+                        entry = wram_blocks_ptr + block_id * 4
+                        tile_index = subtile_y * 2 + subtile_x
+                        return self_obj.emu.read_u8(entry + tile_index)
+                    except Exception:
+                        pass
+                return None
 
             def _check_adjacent(dx, dy):
                 """Check tile at (map_x+dx, map_y+dy) with full tile-level oracle."""
@@ -1298,6 +1343,8 @@ class RedBlueMemoryReader(GameMemoryReader):
             "map_tileset_consistent": map_tileset_consistent,
             "forest_debug_valid": forest_debug_valid,
             "forest_debug_gap": gap,
+            "wram_tileset_blocks_ptr": f"0x{wram_blocks_ptr:04X}" if wram_blocks_ptr else None,
+            "tileset_block_table_loaded": tileset_block_table is not None,
             "map_width_blocks": map_width_blocks if 'map_width_blocks' in dir() and map_width_blocks else None,
             "map_height_blocks": map_height_blocks if 'map_height_blocks' in dir() and map_height_blocks else None,
             "adjacent": adjacent,
