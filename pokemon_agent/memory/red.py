@@ -356,8 +356,9 @@ MAP_NAMES: Dict[int, str] = {
     45: "Viridian Gym",
     46: "Digletts Cave (Route 2)", 47: "Viridian Forest Gate (S)",
     48: "Route 2 Trade House", 49: "Route 2 Gate (N)",
-    50: "Viridian Forest",
-    51: "Pewter Museum 1F", 52: "Pewter Museum 2F",
+    50: "Viridian Forest South Gate",
+    51: "Viridian Forest",
+    52: "Pewter Museum 2F",
     53: "Pewter Gym", 54: "Pewter House", 55: "Pewter Mart",
     56: "Pewter Pokecenter",
     57: "Mt Moon 1F", 58: "Mt Moon B1F", 59: "Mt Moon B2F",
@@ -976,8 +977,8 @@ class RedBlueMemoryReader(GameMemoryReader):
         45: 7,  # GATE        (Viridian Gym — uses Gate tileset)
         47: 9,  # LAB         (Viridian Forest Gate South)
         49: 12, # SHIP_PORT   (Route 2 Gate North)
-        50: 3,  # FOREST      (Viridian Forest outdoor)
-        51: 3,  # FOREST      (Pewter Museum 1F)
+        50: 3,  # FOREST      (Viridian Forest South Gate — runtime outdoor tileset)
+        51: 3,  # FOREST      (Viridian Forest outdoor)
         52: 10, # LOBBY       (Pewter Museum 2F)
         53: 10, # LOBBY       (Pewter Gym)
         57: 8,  # PORT        (Mt Moon 1F)
