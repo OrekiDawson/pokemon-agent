@@ -34,6 +34,8 @@ ADDR_MAP_Y         = 0xD361   # player Y on map  (wYCoord)
 ADDR_MAP_X         = 0xD362   # player X on map  (wXCoord)
 ADDR_MAP_BANK      = 0xD35E   # same byte is map id
 ADDR_FACING        = 0xC109   # sprite facing   (wSpritePlayerStateData1FacingDirection: 0=down,4=up,8=left,0xC=right)
+ADDR_SPRITE_YPIXELS = 0xC104  # wSpritePlayerStateData1YPixels — player sprite Y screen pixel pos
+ADDR_SPRITE_XPIXELS = 0xC106  # wSpritePlayerStateData1XPixels — player sprite X screen pixel pos
 # -- Tile collision (Gen 1 WRAM) --
 ADDR_TILE_STANDING_ON = 0xD365  # wTilePlayerStandingOn
 ADDR_TILE_IN_FRONT    = 0xD366  # wTileInFrontOfPlayer
@@ -1300,30 +1302,54 @@ class RedBlueMemoryReader(GameMemoryReader):
             # Reads tiles from wTileMap (0xC3A0), the actual visible screen
             # tilemap that Gen 1's CheckTilePassable reads during movement.
             # This is the authoritative canary_allowed gate.
+            #
+            # Uses dynamic player_screen_tile_coord derived from the sprite's
+            # actual pixel position (wSpritePlayerStateData1YPixels/XPixels),
+            # NOT fixed (8,9).  The comment in the source says:
+            #   "YPixels: Y screen position (in pixels, always 4 pixels above
+            #    grid which makes sprites appear to be in the center of a tile)"
+            # so the effective tile centre = (YPixels + 4) // 8.
             # ================================================================
             SCREEN_TILE_W = 20  # SCREEN_WIDTH (20 columns)
+            ypix = self.emu.read_u8(ADDR_SPRITE_YPIXELS)
+            xpix = self.emu.read_u8(ADDR_SPRITE_XPIXELS)
+            player_screen_tile_coord = [(xpix // 8), (ypix + 4) // 8]
+            # Adjacent offset: the player is 2 tiles tall and 2 tiles wide,
+            # so the tile above/below/left/right is 2 tiles away in screen space.
             screen_adjacent_coords = {
-                "up":    {"screen_coord": [8, 7]},
-                "down":  {"screen_coord": [8, 11]},
-                "left":  {"screen_coord": [6, 9]},
-                "right": {"screen_coord": [10, 9]},
+                "up":    {"screen_coord": [player_screen_tile_coord[0], player_screen_tile_coord[1] - 2]},
+                "down":  {"screen_coord": [player_screen_tile_coord[0], player_screen_tile_coord[1] + 2]},
+                "left":  {"screen_coord": [player_screen_tile_coord[0] - 2, player_screen_tile_coord[1]]},
+                "right": {"screen_coord": [player_screen_tile_coord[0] + 2, player_screen_tile_coord[1]]},
             }
             engine_screen_tilemap_adjacent = {}
             _passable = local_passable_tiles  # from ROM collision table (reliable)
             for dname in ["up", "down", "left", "right"]:
                 info = screen_adjacent_coords[dname]
                 sx, sy = info["screen_coord"]
-                offset = sy * SCREEN_TILE_W + sx
-                tile_id = self.emu.read_u8(ADDR_W_TILE_MAP + offset)
-                tile_passable = tile_id in _passable if _passable else None
-                engine_screen_tilemap_adjacent[dname] = {
-                    "screen_coord": [sx, sy],
-                    "tile_id": f"0x{tile_id:02X}",
-                    "tile_id_raw": tile_id,
-                    "tile_collision_passable": tile_passable,
-                    "canary_allowed": (tile_passable is True),
-                }
-            # Override up-direction with engine's wTileInFrontOfPlayer (same source)
+                # Bounds: wTileMap is 20 cols × 18 rows
+                if 0 <= sx < SCREEN_TILE_W and 0 <= sy < 18:
+                    offset = sy * SCREEN_TILE_W + sx
+                    tile_id = self.emu.read_u8(ADDR_W_TILE_MAP + offset)
+                    tile_passable = tile_id in _passable if _passable else None
+                    engine_screen_tilemap_adjacent[dname] = {
+                        "screen_coord": [sx, sy],
+                        "tile_id": f"0x{tile_id:02X}",
+                        "tile_id_raw": tile_id,
+                        "tile_collision_passable": tile_passable,
+                        "canary_allowed": (tile_passable is True),
+                    }
+                else:
+                    engine_screen_tilemap_adjacent[dname] = {
+                        "screen_coord": [sx, sy],
+                        "tile_id": None,
+                        "tile_id_raw": None,
+                        "tile_collision_passable": False,
+                        "canary_allowed": False,
+                        "classification": "out_of_screen_bounds",
+                    }
+            # Also override up-direction with engine's wTileInFrontOfPlayer
+            # (but keep the dynamic calculation for the up entry too)
             engine_screen_tilemap_adjacent["up"]["tile_id"] = f"0x{tile_front:02X}"
             engine_screen_tilemap_adjacent["up"]["tile_id_raw"] = tile_front
             engine_screen_tilemap_adjacent["up"]["tile_collision_passable"] = coll_passable
@@ -1387,8 +1413,10 @@ class RedBlueMemoryReader(GameMemoryReader):
             "tileset_block_table_loaded": tileset_block_table is not None,
             "map_width_blocks": map_width_blocks if 'map_width_blocks' in dir() and map_width_blocks else None,
             "map_height_blocks": map_height_blocks if 'map_height_blocks' in dir() and map_height_blocks else None,
+            "player_screen_tile_coord": player_screen_tile_coord if 'player_screen_tile_coord' in dir() else None,
+            "player_sprite_pixel_pos": [xpix, ypix] if 'xpix' in dir() and 'ypix' in dir() else None,
             "adjacent": adjacent,
-            "oracle_source": "engine_screen_tilemap",
+            "oracle_source": "dynamic_player_screen_tilemap",
             "engine_screen_tilemap_adjacent": engine_screen_tilemap_adjacent,
         }
 
