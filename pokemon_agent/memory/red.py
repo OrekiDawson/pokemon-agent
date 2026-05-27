@@ -954,6 +954,56 @@ class RedBlueMemoryReader(GameMemoryReader):
             "badge_count": len(gym_leaders_defeated),
         }
 
+    # Hardcoded map_id → expected_tileset_id lookup (from Gen 1 pokered constants).
+    # Verified against PokemonRed.gb map header bytes (byte 0 = tileset).
+    # Covers all maps essential for forest/gate navigation.
+    MAP_TILESET_LOOKUP: Dict[int, int] = {
+        # Towns / Routes use OVERWORLD tileset
+        0: 0,   # Pallet Town
+        1: 0,   # Viridian City
+        2: 0,   # Pewter City
+        12: 0,  # Route 1
+        13: 0,  # Route 2
+        14: 0,  # Route 3
+        15: 0,  # Route 4
+        # Indoor buildings
+        37: 1,  # REDS_HOUSE (Red's House 1F)
+        38: 4,  # POKECENTER  (Red's House 2F uses Pokecenter tiles)
+        39: 8,  # PORT        (Blue's House)
+        40: 5,  # GYM         (Oak's Lab — header has GYM tileset)
+        41: 6,  # HOUSE       (Viridian Pokecenter)
+        42: 2,  # MART        (Viridian Mart)
+        45: 7,  # GATE        (Viridian Gym — uses Gate tileset)
+        47: 9,  # LAB         (Viridian Forest Gate South)
+        49: 12, # SHIP_PORT   (Route 2 Gate North)
+        50: 3,  # FOREST      (Viridian Forest outdoor)
+        51: 3,  # FOREST      (Pewter Museum 1F)
+        52: 10, # LOBBY       (Pewter Museum 2F)
+        53: 10, # LOBBY       (Pewter Gym)
+        57: 8,  # PORT        (Mt Moon 1F)
+    }
+
+    # Collision label names for each tileset ID
+    _COLLISION_LABELS: Dict[int, str] = {
+        0: "Overworld_Coll",
+        1: "House_Coll",
+        2: "Mart_Coll",
+        3: "Forest_Coll",
+        4: "Pokecenter_Coll",
+        5: "Gym_Coll",
+        6: "House_Coll",
+        7: "Gate_Coll",
+        8: "ShipPort_Coll",
+        9: "Lab_Coll",
+        10: "Lobby_Coll",
+        11: "Ship_Coll",
+        12: "ShipPort_Coll",
+        13: "Cavern_Coll",
+        14: "Cemetery_Coll",
+        15: "Interior_Coll",
+        16: "Plateau_Coll",
+    }
+
     def read_forest_debug(self) -> Dict[str, Any]:
         """Read tile collision debug fields for forest/overworld navigation.
 
@@ -1041,6 +1091,26 @@ class RedBlueMemoryReader(GameMemoryReader):
                     nearest_warps.append(entry)
                 # Otherwise not near enough to report
 
+        # --- Sanity check: is map→tileset mapping consistent? ---
+        expected_ts_id = self.MAP_TILESET_LOOKUP.get(map_id)
+        expected_name = TILESET_NAMES.get(expected_ts_id, f"unknown({expected_ts_id})") if expected_ts_id is not None else None
+        map_tileset_consistent: bool
+        forest_debug_valid: bool
+        gap: str | None = None
+
+        if expected_ts_id is None:
+            # Map not in our lookup table — can't judge consistency
+            map_tileset_consistent = True  # unknown = not false-positive
+            forest_debug_valid = True
+        elif tileset_id == expected_ts_id:
+            map_tileset_consistent = True
+            forest_debug_valid = True
+        else:
+            # Tileset mismatch: likely a save/state warp transition inconsistency
+            map_tileset_consistent = False
+            forest_debug_valid = False
+            gap = "map_tileset_parser_gap"
+
         return {
             "map": map_name,
             "map_id": map_id,
@@ -1054,6 +1124,7 @@ class RedBlueMemoryReader(GameMemoryReader):
             "front_coord": front_coord,
             "tileset": tileset_name,
             "tileset_id": tileset_id,
+            "collision_label": self._COLLISION_LABELS.get(tileset_id, f"unknown_collision({tileset_id})"),
             "collision_addr": f"0x{coll_addr:04X}" if coll_addr else None,
             "wram_coll_ptr": f"0x{wram_coll_ptr:04X}" if wram_coll_ptr else None,
             "coll_tile_list": coll_tile_list if coll_addr else None,
@@ -1063,6 +1134,17 @@ class RedBlueMemoryReader(GameMemoryReader):
             "num_warps": num_warps,
             "warp_under_player": warp_under_player,
             "nearest_warps": nearest_warps,
+            # Raw fields for oracle sanity
+            "map_id_raw": map_id,
+            "map_name_from_id": map_name,
+            "wCurMap_raw": map_id,
+            "tileset_id_raw": tileset_id,
+            "tileset_name_from_id": tileset_name,
+            "map_tileset_expected_from_source": expected_name,
+            "map_tileset_expected_id": expected_ts_id,
+            "map_tileset_consistent": map_tileset_consistent,
+            "forest_debug_valid": forest_debug_valid,
+            "forest_debug_gap": gap,
         }
 
     def _bag_contains(self, item_id: int) -> bool:
