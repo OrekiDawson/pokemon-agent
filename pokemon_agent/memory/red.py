@@ -41,6 +41,7 @@ ADDR_CUR_MAP_WIDTH     = 0xD369  # wCurMapWidth
 ADDR_CUR_MAP_DATA_PTR  = 0xD36A  # wCurMapDataPtr (2 bytes LE)
 ADDR_CUR_MAP_TEXT_PTR  = 0xD36C  # wCurMapTextPtr (2 bytes LE)
 ADDR_OVERWORLD_MAP_BASE = 0xC4A0  # wOverworldMap (block ID buffer in WRAM, with 3-block border for map connections)
+ADDR_TILESET_BLOCKS_PTR = 0xD529  # wTilesetBlocksPtr (2 bytes LE) — pointer to block→4-tile decomposition table
 ADDR_TILESET_GFX_PTR   = 0xD52B  # wTilesetGfxPtr (2 bytes LE)
 ADDR_TILESET_COLL_PTR  = 0xD52D  # wTilesetCollisionPtr (2 bytes LE — UNRELIABLE, use COLLISION_TABLE_LOOKUP instead)
 # wTilesetTalkingOverTiles at 0xD52F (3 bytes)
@@ -1113,10 +1114,11 @@ class RedBlueMemoryReader(GameMemoryReader):
             forest_debug_valid = False
             gap = "map_tileset_parser_gap"
 
-        # --- Adjacent tile oracle (read from wOverworldMap block buffer) ---
+        # --- Adjacent tile oracle (read from wOverworldMap block buffer, decomposed to tile level) ---
         # Gen1 wOverworldMap at 0xC4A0 stores block IDs (2×2 metatiles).
         # wCurMapWidth/wCurMapHeight are in **blocks**, not tiles.
         # Player tile coords (map_x, map_y) must be halved to get block coords.
+        # Each block encodes 4 tiles; read wTilesetBlocksPtr for block→tile decomposition.
         # MAP_BORDER=3 per pokered/constants/map_data_constants.asm.
         # offset = (MAP_BORDER + block_y) * (map_width_blocks + 2*MAP_BORDER) + (MAP_BORDER + block_x)
         adjacent = {}
@@ -1131,6 +1133,9 @@ class RedBlueMemoryReader(GameMemoryReader):
             buf_width = map_width_blocks + 2 * MAP_BORDER  # = map_width_blocks + 6
             buf_base = ADDR_OVERWORLD_MAP_BASE  # 0xC4A0
 
+            # Read tileset block data pointer for block→tile decomposition
+            blocks_ptr = self.emu.read_u16(ADDR_TILESET_BLOCKS_PTR)
+
             # Ensure passable_tiles is defined (may be unbound if coll_addr was None)
             passable_tiles_default: list = []
             if coll_tile_list:
@@ -1138,18 +1143,30 @@ class RedBlueMemoryReader(GameMemoryReader):
                     passable_tiles_default = passable_tiles  # type: ignore
                 except NameError:
                     pass
-            local_passable = passable_tiles_default
+            local_passable_tiles = passable_tiles_default  # actual tile IDs (matches engine collision)
 
             def _block_at(self_obj, bx, by):
                 """Read block ID at block-level coordinates (bx, by)."""
                 off = (MAP_BORDER + by) * buf_width + (MAP_BORDER + bx)
                 return self_obj.emu.read_u8(buf_base + off)
 
-            # Ensure local_passable is accessible in closure
-            _local_passable = local_passable
+            def _decompose_tile(self_obj, block_id, subtile_x, subtile_y):
+                """Decompose a 2×2 block into its 4 tile IDs using tileset block data.
+                
+                Each block = 4 bytes: [TL, TR, BL, BR] tile IDs.
+                subtile_x=0, subtile_y=0 → TL, (1,0) → TR, (0,1) → BL, (1,1) → BR
+                """
+                if not blocks_ptr or blocks_ptr == 0:
+                    return None
+                try:
+                    entry = blocks_ptr + block_id * 4
+                    tile_index = subtile_y * 2 + subtile_x
+                    return self_obj.emu.read_u8(entry + tile_index)
+                except Exception:
+                    return None
 
-            def _check_adjacent(dname, dx, dy):
-                """Check tile (dx,dy) adjacent to player tile (map_x,map_y)."""
+            def _check_adjacent(dx, dy):
+                """Check tile at (map_x+dx, map_y+dy) with full tile-level oracle."""
                 tile_x = map_x + dx
                 tile_y = map_y + dy
                 # Bounds check against the walk grid (tile-level)
@@ -1159,21 +1176,51 @@ class RedBlueMemoryReader(GameMemoryReader):
                         "in_bounds": False,
                         "classification": "out_of_walk_grid",
                         "passable": False,
-                        "passable_heuristic": False,
+                        "canary_allowed": False,
                     }
                 # Downsample tile coords to block coords
                 block_x = tile_x // 2
                 block_y = tile_y // 2
                 block_id = _block_at(self, block_x, block_y)
-                ph = block_id in _local_passable or block_id < 0x10
+                # Subtile position within the block
+                subtile_x = tile_x % 2
+                subtile_y = tile_y % 2
+                subtile_coord = [subtile_x, subtile_y]
+                # Decompose block to actual tile ID
+                actual_tile_id = _decompose_tile(self, block_id, subtile_x, subtile_y)
+                # Tile-level collision passability
+                tile_collision_passable = None
+                if actual_tile_id is not None and local_passable_tiles:
+                    tile_collision_passable = actual_tile_id in local_passable_tiles
+                elif actual_tile_id is not None:
+                    # Passable tiles list unavailable — conservative default
+                    tile_collision_passable = False
+                # Block-level heuristic (fallback only, not for canary decisions)
+                block_passable_heuristic = (
+                    (actual_tile_id is not None and tile_collision_passable)  # tile match
+                    or (block_id in local_passable_tiles)  # block in tile list (weak heuristic)
+                    or (block_id < 0x10)  # background ground
+                )
+                # Canary decision: ONLY tile-level passable
+                canary_allowed = (tile_collision_passable is True)
+                classification = (
+                    "passable" if tile_collision_passable
+                    else "blocked_by_tile_collision" if tile_collision_passable is False
+                    else "tile_collision_unknown"
+                )
                 return {
                     "coord": [tile_x, tile_y],
-                    "block_coord": [block_x, block_y],
                     "in_bounds": True,
+                    "block_coord": [block_x, block_y],
+                    "subtile_coord": subtile_coord,
                     "block_id": f"0x{block_id:02X}",
                     "block_id_raw": block_id,
-                    "passable_heuristic": ph,
-                    # Only also store tile-level for up direction override
+                    "tile_id": f"0x{actual_tile_id:02X}" if actual_tile_id is not None else None,
+                    "tile_id_raw": actual_tile_id,
+                    "tile_collision_passable": tile_collision_passable,
+                    "block_passable_heuristic": block_passable_heuristic,
+                    "canary_allowed": canary_allowed,
+                    "classification": classification,
                 }
 
             directions = [
@@ -1183,12 +1230,20 @@ class RedBlueMemoryReader(GameMemoryReader):
                 ("right", 1, 0),
             ]
             for dname, dx, dy in directions:
-                adjacent[dname] = _check_adjacent(dname, dx, dy)
+                adjacent[dname] = _check_adjacent(dx, dy)
             # Override up-direction with the actual runtime tile_in_front for precision
             if adjacent.get("up", {}).get("in_bounds", False):
                 adjacent["up"]["tile_in_front_raw"] = tile_front
                 adjacent["up"]["tile_in_front"] = f"0x{tile_front:02X}"
-                adjacent["up"]["collision_passable"] = coll_passable
+                adjacent["up"]["tile_in_front_from_engine"] = True
+                # Engine's collision result is the ground truth for facing direction
+                adjacent["up"]["tile_collision_passable"] = coll_passable
+                adjacent["up"]["tile_id_raw"] = tile_front
+                adjacent["up"]["tile_id"] = f"0x{tile_front:02X}"
+                adjacent["up"]["canary_allowed"] = (coll_passable is True)
+                adjacent["up"]["classification"] = (
+                    "passable" if coll_passable else "blocked_by_tile_collision"
+                )
         except Exception:
             adjacent = None
 
