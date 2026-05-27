@@ -43,6 +43,11 @@ ADDR_CUR_MAP_WIDTH     = 0xD369  # wCurMapWidth
 ADDR_CUR_MAP_DATA_PTR  = 0xD36A  # wCurMapDataPtr (2 bytes LE)
 ADDR_CUR_MAP_TEXT_PTR  = 0xD36C  # wCurMapTextPtr (2 bytes LE)
 ADDR_OVERWORLD_MAP_BASE = 0xC4A0  # wOverworldMap (block ID buffer in WRAM, with 3-block border for map connections)
+# wTileMap at 0xC3A0 — screen-relative tile buffer (20 columns x 18 rows).
+# Gen 1's CheckTilePassable reads from this buffer, NOT from wOverworldMap.
+# Screen positions (tile coords): player center at (8,9), front at (8,7),
+# behind at (8,11), left at (6,9), right at (10,9).
+ADDR_W_TILE_MAP     = 0xC3A0  # wTileMap — screen tilemap buffer
 ADDR_TILESET_BLOCKS_PTR = 0xD529  # wTilesetBlocksPtr (2 bytes LE) — pointer to block→4-tile decomposition table
 ADDR_TILESET_GFX_PTR   = 0xD52B  # wTilesetGfxPtr (2 bytes LE)
 ADDR_TILESET_COLL_PTR  = 0xD52D  # wTilesetCollisionPtr (2 bytes LE — UNRELIABLE, use COLLISION_TABLE_LOOKUP instead)
@@ -1289,8 +1294,43 @@ class RedBlueMemoryReader(GameMemoryReader):
                 adjacent["up"]["classification"] = (
                     "passable" if coll_passable else "blocked_by_tile_collision"
                 )
+
+            # ================================================================
+            # Engine screen tilemap adjacent oracle
+            # Reads tiles from wTileMap (0xC3A0), the actual visible screen
+            # tilemap that Gen 1's CheckTilePassable reads during movement.
+            # This is the authoritative canary_allowed gate.
+            # ================================================================
+            SCREEN_TILE_W = 20  # SCREEN_WIDTH (20 columns)
+            screen_adjacent_coords = {
+                "up":    {"screen_coord": [8, 7]},
+                "down":  {"screen_coord": [8, 11]},
+                "left":  {"screen_coord": [6, 9]},
+                "right": {"screen_coord": [10, 9]},
+            }
+            engine_screen_tilemap_adjacent = {}
+            _passable = local_passable_tiles  # from ROM collision table (reliable)
+            for dname in ["up", "down", "left", "right"]:
+                info = screen_adjacent_coords[dname]
+                sx, sy = info["screen_coord"]
+                offset = sy * SCREEN_TILE_W + sx
+                tile_id = self.emu.read_u8(ADDR_W_TILE_MAP + offset)
+                tile_passable = tile_id in _passable if _passable else None
+                engine_screen_tilemap_adjacent[dname] = {
+                    "screen_coord": [sx, sy],
+                    "tile_id": f"0x{tile_id:02X}",
+                    "tile_id_raw": tile_id,
+                    "tile_collision_passable": tile_passable,
+                    "canary_allowed": (tile_passable is True),
+                }
+            # Override up-direction with engine's wTileInFrontOfPlayer (same source)
+            engine_screen_tilemap_adjacent["up"]["tile_id"] = f"0x{tile_front:02X}"
+            engine_screen_tilemap_adjacent["up"]["tile_id_raw"] = tile_front
+            engine_screen_tilemap_adjacent["up"]["tile_collision_passable"] = coll_passable
+            engine_screen_tilemap_adjacent["up"]["canary_allowed"] = (coll_passable is True)
         except Exception:
             adjacent = None
+            engine_screen_tilemap_adjacent = None
 
         # Compute layered coordinate fields
         player_block_coord = [map_x // 2, map_y // 2] if map_x is not None else None
@@ -1348,6 +1388,8 @@ class RedBlueMemoryReader(GameMemoryReader):
             "map_width_blocks": map_width_blocks if 'map_width_blocks' in dir() and map_width_blocks else None,
             "map_height_blocks": map_height_blocks if 'map_height_blocks' in dir() and map_height_blocks else None,
             "adjacent": adjacent,
+            "oracle_source": "engine_screen_tilemap",
+            "engine_screen_tilemap_adjacent": engine_screen_tilemap_adjacent,
         }
 
     def _bag_contains(self, item_id: int) -> bool:
