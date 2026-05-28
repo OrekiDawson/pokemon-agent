@@ -91,10 +91,39 @@ ADDR_MENU_CURSOR_POS = 0xCC26 # wMenuCursorPosition: linear index for 2D menus; 
 
 # -- Dialog --
 ADDR_TEXT_BOX_ID   = 0xD125   # wTextBoxID
-ADDR_JOY_IGNORE    = 0xD730   # bit 5 = joypad disabled (in dialogue)
+ADDR_FONT_LOADED   = 0xD730   # wFontLoaded — was mistakenly used as JOY_IGNORE (see below)
+ADDR_JOY_IGNORE    = 0xCCB7   # wJoyIgnore — bit5=joypad disabled during text/dialog
 ADDR_TEXT_PROGRESS  = 0xC4F2  # approximate; nonzero when text printing
 ADDR_STRING_BUFFER  = 0xCF4B  # wStringBuffer — decoded text ready for display (96+ bytes)
 MAX_TEXT_LEN        = 96
+
+# -- Gen-1 input gate debug (HRAM mirrors at fixed I/O ports) --
+ADDR_HJOY_INPUT    = 0xFF00   # hJoyInput — raw I/O port (read during VBlank IRQ)
+ADDR_HJOY_HELD      = 0xFF5A   # hJoyHeld — held keys this frame
+ADDR_HJOY_PRESSED   = 0xFF59   # hJoyPressed — newly pressed keys (1-frame flag)
+ADDR_HJOY_RELEASED  = 0xFF58   # hJoyReleased — newly released keys
+
+# -- Input/Script state (WRAM) --
+ADDR_JOY_IGNORE_EXT = 0xCCB7   # wJoyIgnore — same as ADDR_JOY_IGNORE (0xCCB7)
+ADDR_STATUS_FLAGS4  = 0xD7F7   # wStatusFlags4 — BIT_BATTLE_OVER, BIT_INIT_SCRIPTED_MOVEMENT
+ADDR_STATUS_FLAGS5  = 0xD7F8   # wStatusFlags5 — BIT_DISABLE_JOYPAD, BIT_SCRIPTED_MOVEMENT_STATE
+ADDR_STATUS_FLAGS7  = 0xD7FA   # wStatusFlags7 — BIT_USE_CUR_MAP_SCRIPT, BIT_TRAINER_BATTLE, BIT_FORCED_WARP
+ADDR_SIMULATED_JOYPAD_STATES_INDEX = 0xD6E7  # wSimulatedJoypadStatesIndex — scripted walk queue
+ADDR_MOVEMENT_FLAGS = 0xD3F5   # wMovementFlags — standing on warp/door, spinning, etc.
+ADDR_MAP_SCRIPT_FLAGS = 0xD657  # wCurrentMapScriptFlags
+
+# -- Battle cleanup debug --
+ADDR_IS_IN_BATTLE  = 0xD057   # wBattleType — 0=none, 1=wild, 2=trainer (also ADDR_BATTLE_TYPE)
+ADDR_BATTLE_RESULT = 0xD7C7   # wBattleResult — outcome after battle ends
+ADDR_CUR_OPPONENT   = 0xD6D5   # wCurOpponent — species ID of current enemy
+ADDR_FORCE_EVOLUTION = 0xD757  # wForceEvolution — evolution pending flag
+
+# -- Text engine --
+ADDR_FONT_LOADED_EXT = 0xD730  # wFontLoaded — font/text engine active flags (was wrongly used as JOY_IGNORE)
+ADDR_TEXT_BOX_ID_EXT = 0xD125  # wTextBoxID — text box tile ID (redundant with ADDR_TEXT_BOX_ID)
+
+# -- Overworld player movement --
+ADDR_WALK_COUNTER   = 0xD35C   # wWalkCounter — steps in current walk animation
 
 # -- Pokedex --
 ADDR_DEX_OWNED     = 0xD2F7   # 19 bytes (152 bits, only 151 used)
@@ -1150,6 +1179,169 @@ class RedBlueMemoryReader(GameMemoryReader):
             "text_addr": ADDR_STRING_BUFFER,
             "text_bytes_hex": text_bytes_hex,
             "text_decode_status": decode_status,
+        }
+
+    def read_gen1_input_debug(self) -> Dict[str, Any]:
+        """Read Gen-1 input gate and script state fields.
+
+        This method provides visibility into why player input may be
+        blocked or why scripted movement is active. Call this instead
+        of guessing when buttons have no effect.
+
+        Key addresses (verified against pret/pokered):
+          - wJoyIgnore (0xCCB7): bit5 disables joypad during text/dialog
+          - wStatusFlags5 (0xD7F8): bit1=BIT_DISABLE_JOYPAD, bit0=BIT_SCRIPTED_MOVEMENT_STATE
+          - wStatusFlags4 (0xD7F7): bit6=BIT_BATTLE_OVER, bit2=BIT_INIT_SCRIPTED_MOVEMENT
+          - wStatusFlags7 (0xD7FA): bit0=BIT_USE_CUR_MAP_SCRIPT, bit4=BIT_FORCED_WARP
+          - wSimulatedJoypadStatesIndex (0xD6E7): non-zero = scripted walk queue active
+          - wMovementFlags (0xD3F5): standing on warp/door/ledge/spinning flags
+          - hJoyHeld (0xFF5A): currently held keys
+          - hJoyPressed (0xFF59): newly pressed keys (1-frame pulse)
+
+        Decision table:
+          A. wJoyIgnore!=0 or bit_DISABLE_JOYPAD=1 → joypad_masked; wait only
+          B. wSimulatedJoypadStatesIndex!=0 or BIT_SCRIPTED_MOVEMENT=1 → scripted_input_queue; wait only
+          C. wIsInBattle=0 but wBattleResult/wForceEvolution not clean → end_of_battle_cleanup_gap
+          D. wFontLoaded bit0=1 and wTextBoxID non-zero → text_engine_owns_input
+          E. All gates clear but xy frozen → coordinate_stale_gap
+
+        Returns:
+            dict with all raw values and decoded bit fields.
+        """
+        # HRAM input mirrors
+        hjoy_input = self.emu.read_u8(ADDR_HJOY_INPUT)
+        hjoy_held = self.emu.read_u8(ADDR_HJOY_HELD)
+        hjoy_pressed = self.emu.read_u8(ADDR_HJOY_PRESSED)
+        hjoy_released = self.emu.read_u8(ADDR_HJOY_RELEASED)
+
+        # WRAM input gates
+        wjoy_ignore = self.emu.read_u8(ADDR_JOY_IGNORE)       # 0xCCB7
+        wfont_loaded = self.emu.read_u8(ADDR_FONT_LOADED)    # 0xD730 (was wrongly used as JOY_IGNORE)
+
+        # Status flags
+        status_flags4 = self.emu.read_u8(ADDR_STATUS_FLAGS4)  # 0xD7F7
+        status_flags5 = self.emu.read_u8(ADDR_STATUS_FLAGS5) # 0xD7F8
+        status_flags7 = self.emu.read_u8(ADDR_STATUS_FLAGS7) # 0xD7FA
+
+        # Script/input queues
+        sim_joypad_index = self.emu.read_u8(ADDR_SIMULATED_JOYPAD_STATES_INDEX)  # 0xD6E7
+        movement_flags = self.emu.read_u8(ADDR_MOVEMENT_FLAGS)   # 0xD3F5
+        map_script_flags = self.emu.read_u8(ADDR_MAP_SCRIPT_FLAGS)  # 0xD657
+
+        # Battle cleanup
+        battle_type = self.emu.read_u8(ADDR_IS_IN_BATTLE)     # 0xD057 (same as ADDR_BATTLE_TYPE)
+        battle_result = self.emu.read_u8(ADDR_BATTLE_RESULT)   # 0xD7C7
+        cur_opponent = self.emu.read_u8(ADDR_CUR_OPPONENT)     # 0xD6D5
+        force_evolution = self.emu.read_u8(ADDR_FORCE_EVOLUTION)  # 0xD757
+
+        # Text engine
+        text_box_id = self.emu.read_u8(ADDR_TEXT_BOX_ID)      # 0xD125
+
+        # Walk counter
+        walk_counter = self.emu.read_u8(ADDR_WALK_COUNTER)     # 0xD35C
+
+        # Decode bit fields
+        bit_disable_joypad = bool(status_flags5 & 0x02)       # BIT_DISABLE_JOYPAD
+        bit_scripted_movement_state = bool(status_flags5 & 0x01)  # BIT_SCRIPTED_MOVEMENT_STATE
+        bit_battle_over = bool(status_flags4 & 0x40)          # BIT_BATTLE_OVER_OR_BLACKOUT
+        bit_init_scripted_movement = bool(status_flags4 & 0x04)  # BIT_INIT_SCRIPTED_MOVEMENT
+        bit_use_cur_map_script = bool(status_flags7 & 0x01)   # BIT_USE_CUR_MAP_SCRIPT
+        bit_trainer_battle = bool(status_flags7 & 0x10)       # BIT_TRAINER_BATTLE
+        bit_forced_warp = bool(status_flags7 & 0x10)          # BIT_FORCED_WARP (shared bit)
+
+        # Movement flags decode
+        standing_on_door = bool(movement_flags & 0x01)
+        exiting_door = bool(movement_flags & 0x02)
+        standing_on_warp = bool(movement_flags & 0x04)
+        ledge_or_fishing = bool(movement_flags & 0x08)
+        spinning = bool(movement_flags & 0x10)
+
+        # HJOY key mappings (Game Boy d-pad)
+        HJOY_A      = 0x01
+        HJOY_B      = 0x02
+        HJOY_SELECT = 0x04
+        HJOY_START  = 0x08
+        HJOY_RIGHT  = 0x10
+        HJOY_LEFT   = 0x20
+        HJOY_UP     = 0x40
+        HJOY_DOWN   = 0x80
+
+        def hjoy_key_names(val: int) -> list:
+            keys = []
+            if val & HJOY_A:      keys.append("A")
+            if val & HJOY_B:      keys.append("B")
+            if val & HJOY_SELECT: keys.append("SELECT")
+            if val & HJOY_START:  keys.append("START")
+            if val & HJOY_RIGHT:  keys.append("RIGHT")
+            if val & HJOY_LEFT:   keys.append("LEFT")
+            if val & HJOY_UP:     keys.append("UP")
+            if val & HJOY_DOWN:   keys.append("DOWN")
+            return keys
+
+        # Decision gate
+        if wjoy_ignore & 0x20 or bit_disable_joypad:
+            gate_conclusion = "joypad_masked"
+        elif sim_joypad_index != 0 or bit_scripted_movement_state:
+            gate_conclusion = "scripted_input_queue"
+        elif battle_type != 0 and bit_battle_over:
+            gate_conclusion = "end_of_battle_cleanup_gap"
+        elif wfont_loaded & 0x01 and text_box_id != 0:
+            gate_conclusion = "text_engine_owns_input"
+        elif sim_joypad_index == 0 and wjoy_ignore == 0 and not bit_disable_joypad and not bit_scripted_movement_state:
+            if walk_counter == 0:
+                gate_conclusion = "input_gates_clear_movement_idle"
+            else:
+                gate_conclusion = "input_gates_clear_walk_animation_active"
+        else:
+            gate_conclusion = "indeterminate"
+
+        return {
+            # Raw HRAM
+            "hjoy_input": hjoy_input,
+            "hjoy_input_keys": hjoy_key_names(hjoy_input),
+            "hjoy_held": hjoy_held,
+            "hjoy_held_keys": hjoy_key_names(hjoy_held),
+            "hjoy_pressed": hjoy_pressed,
+            "hjoy_pressed_keys": hjoy_key_names(hjoy_pressed),
+            "hjoy_released": hjoy_released,
+            "hjoy_released_keys": hjoy_key_names(hjoy_released),
+            # Raw WRAM input gates
+            "wjoy_ignore": wjoy_ignore,
+            "wjoy_ignore_bit5_dialog_active": bool(wjoy_ignore & 0x20),
+            "wfont_loaded": wfont_loaded,
+            "wfont_loaded_bit0_font_active": bool(wfont_loaded & 0x01),
+            # Status flags raw
+            "status_flags4": status_flags4,
+            "status_flags5": status_flags5,
+            "status_flags7": status_flags7,
+            # Status flags decoded
+            "bit_disable_joypad": bit_disable_joypad,
+            "bit_scripted_movement_state": bit_scripted_movement_state,
+            "bit_battle_over": bit_battle_over,
+            "bit_init_scripted_movement": bit_init_scripted_movement,
+            "bit_use_cur_map_script": bit_use_cur_map_script,
+            "bit_trainer_battle": bit_trainer_battle,
+            "bit_forced_warp": bit_forced_warp,
+            # Script/input queues
+            "sim_joypad_index": sim_joypad_index,
+            "movement_flags": movement_flags,
+            "standing_on_door": standing_on_door,
+            "exiting_door": exiting_door,
+            "standing_on_warp": standing_on_warp,
+            "ledge_or_fishing": ledge_or_fishing,
+            "spinning": spinning,
+            "map_script_flags": map_script_flags,
+            # Battle cleanup
+            "battle_type": battle_type,
+            "battle_result": battle_result,
+            "cur_opponent": cur_opponent,
+            "force_evolution": force_evolution,
+            # Text engine
+            "text_box_id": text_box_id,
+            # Movement
+            "walk_counter": walk_counter,
+            # Gate decision
+            "gate_conclusion": gate_conclusion,
         }
 
     def read_map_info(self) -> Dict[str, Any]:
