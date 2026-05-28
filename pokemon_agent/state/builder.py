@@ -147,7 +147,15 @@ def build_state_summary(state: Dict[str, Any]) -> str:
     if battle and battle.get("in_battle"):
         lines.append("")
         lines.append("--- BATTLE ---")
-        lines.append(f"Type: {battle.get('type', '?')}")
+        kind = battle.get("kind", battle.get("type", "?"))
+        lines.append(f"Kind: {kind}  (confidence={battle.get('confidence', '?')})")
+        run_ok = battle.get("run_allowed")
+        if run_ok is not None:
+            lines.append(f"Run: {'yes' if run_ok else 'no (trainer)'}")
+        tc = battle.get("trainer_class")
+        tn = battle.get("trainer_name")
+        if tc is not None:
+            lines.append(f"Trainer class={tc} name={tn or '?'}")
         enemy = battle.get("enemy")
         if enemy:
             lines.append(
