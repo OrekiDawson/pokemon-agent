@@ -1,0 +1,270 @@
+/home/oreki/pokered/engine/movie/oak_speech/oak_speech.asm:61:	call PrepareForSpecialWarp
+/home/oreki/pokered/engine/link/cable_club.asm:592:	ld [wDestinationWarpID], a
+/home/oreki/pokered/engine/link/cable_club.asm:593:	call LoadMapData
+/home/oreki/pokered/engine/link/cable_club.asm:594:	farcall ClearVariablesOnEnterMap
+/home/oreki/pokered/engine/menus/main_menu.asm:116:	jp z, SpecialEnterMap
+/home/oreki/pokered/engine/menus/main_menu.asm:119:	jp nz, SpecialEnterMap
+/home/oreki/pokered/engine/menus/main_menu.asm:124:	call PrepareForSpecialWarp
+/home/oreki/pokered/engine/menus/main_menu.asm:125:	jp SpecialEnterMap
+/home/oreki/pokered/engine/menus/main_menu.asm:279:	call PrepareForSpecialWarp
+/home/oreki/pokered/engine/menus/main_menu.asm:288:	jr SpecialEnterMap
+/home/oreki/pokered/engine/menus/main_menu.asm:327:SpecialEnterMap::
+/home/oreki/pokered/engine/menus/main_menu.asm:341:	jp EnterMap
+/home/oreki/pokered/engine/menus/start_sub_menus.asm:228:	text_far _WarpToLastPokemonCenterText
+/home/oreki/pokered/engine/battle/wild_encounters.asm:10:	callfar IsPlayerStandingOnDoorTileOrWarpTile
+/home/oreki/pokered/engine/battle/wild_encounters.asm:11:	jr nc, .notStandingOnDoorOrWarpTile
+/home/oreki/pokered/engine/battle/wild_encounters.asm:16:.notStandingOnDoorOrWarpTile
+/home/oreki/pokered/engine/battle/end_of_battle.asm:74:	ld [wDestinationWarpID], a
+/home/oreki/pokered/engine/overworld/player_animations.asm:1:EnterMapAnim::
+/home/oreki/pokered/engine/overworld/player_animations.asm:18:	jr nz, .dungeonWarpAnimation
+/home/oreki/pokered/engine/overworld/player_animations.asm:22:	call IsPlayerStandingOnWarpPadOrHole
+/home/oreki/pokered/engine/overworld/player_animations.asm:41:.dungeonWarpAnimation
+/home/oreki/pokered/engine/overworld/player_animations.asm:95:	call IsPlayerStandingOnWarpPadOrHole
+/home/oreki/pokered/engine/overworld/player_animations.asm:98:	jr z, .playerNotStandingOnWarpPadOrHole
+/home/oreki/pokered/engine/overworld/player_animations.asm:112:	call IsPlayerStandingOnWarpPadOrHole
+/home/oreki/pokered/engine/overworld/player_animations.asm:115:	jr z, .playerStandingOnWarpPad
+/home/oreki/pokered/engine/overworld/player_animations.asm:119:.playerStandingOnWarpPad
+/home/oreki/pokered/engine/overworld/player_animations.asm:122:.playerNotStandingOnWarpPadOrHole
+/home/oreki/pokered/engine/overworld/player_animations.asm:350:IsPlayerStandingOnWarpPadOrHole::
+/home/oreki/pokered/engine/overworld/player_animations.asm:352:	ld hl, WarpPadAndHoleData
+/home/oreki/pokered/engine/overworld/player_animations.asm:373:	ld [wStandingOnWarpPadOrHole], a
+/home/oreki/pokered/engine/overworld/map_sprites.asm:18:; to [x#SPRITESTATEDATA2_PICTUREID] for LoadMapSpriteTilePatterns.
+/home/oreki/pokered/engine/overworld/map_sprites.asm:33:LoadMapSpriteTilePatterns:
+/home/oreki/pokered/engine/overworld/map_sprites.asm:300:; with picture IDs. This is done so that LoadMapSpriteTilePatterns will
+/home/oreki/pokered/engine/overworld/map_sprites.asm:327:	call LoadMapSpriteTilePatterns
+/home/oreki/pokered/engine/overworld/map_sprites.asm:332:; The VRAM tile pattern slots that LoadMapSpriteTilePatterns set are in the
+/home/oreki/pokered/engine/overworld/hidden_events.asm:1:IsPlayerOnDungeonWarp::
+/home/oreki/pokered/engine/overworld/hidden_events.asm:3:	ld [wWhichDungeonWarp], a
+/home/oreki/pokered/engine/overworld/hidden_events.asm:10:	ld [wWhichDungeonWarp], a
+/home/oreki/pokered/engine/overworld/player_state.asm:2:IsPlayerStandingOnWarp::
+/home/oreki/pokered/engine/overworld/player_state.asm:3:	ld a, [wNumberOfWarps]
+/home/oreki/pokered/engine/overworld/player_state.asm:7:	ld hl, wWarpEntries
+/home/oreki/pokered/engine/overworld/player_state.asm:11:	jr nz, .nextWarp1
+/home/oreki/pokered/engine/overworld/player_state.asm:15:	jr nz, .nextWarp2
+/home/oreki/pokered/engine/overworld/player_state.asm:18:	ld [wDestinationWarpID], a
+/home/oreki/pokered/engine/overworld/player_state.asm:20:	ldh [hWarpDestinationMap], a
+/home/oreki/pokered/engine/overworld/player_state.asm:24:.nextWarp1
+/home/oreki/pokered/engine/overworld/player_state.asm:26:.nextWarp2
+/home/oreki/pokered/engine/overworld/player_state.asm:152:IsWarpTileInFrontOfPlayer::
+/home/oreki/pokered/engine/overworld/player_state.asm:159:	jr z, IsSSAnneBowWarpTileInFrontOfPlayer
+/home/oreki/pokered/engine/overworld/player_state.asm:164:	ld hl, WarpTileListPointers
+/home/oreki/pokered/engine/overworld/player_state.asm:180:IsSSAnneBowWarpTileInFrontOfPlayer:
+/home/oreki/pokered/engine/overworld/player_state.asm:183:	jr nz, .notSSAnne5Warp
+/home/oreki/pokered/engine/overworld/player_state.asm:185:	jr IsWarpTileInFrontOfPlayer.done
+/home/oreki/pokered/engine/overworld/player_state.asm:186:.notSSAnne5Warp
+/home/oreki/pokered/engine/overworld/player_state.asm:188:	jr IsWarpTileInFrontOfPlayer.done
+/home/oreki/pokered/engine/overworld/player_state.asm:190:IsPlayerStandingOnDoorTileOrWarpTile::
+/home/oreki/pokered/engine/overworld/player_state.asm:200:	ld hl, WarpTileIDPointers
+/home/oreki/pokered/engine/overworld/tilesets.asm:45:	ld a, [wDestinationWarpID]
+/home/oreki/pokered/engine/overworld/tilesets.asm:48:	call LoadDestinationWarpPosition
+/home/oreki/pokered/engine/overworld/clear_variables.asm:1:ClearVariablesOnEnterMap::
+/home/oreki/pokered/engine/overworld/clear_variables.asm:18:	ld bc, wStandingOnWarpPadOrHole - wWhichTrade
+/home/oreki/pokered/engine/overworld/special_warps.asm:1:PrepareForSpecialWarp::
+/home/oreki/pokered/engine/overworld/special_warps.asm:2:	call LoadSpecialWarpData
+/home/oreki/pokered/engine/overworld/special_warps.asm:7:	jr z, .debugNewGameWarp
+/home/oreki/pokered/engine/overworld/special_warps.asm:10:.debugNewGameWarp
+/home/oreki/pokered/engine/overworld/special_warps.asm:12:	jr z, .setNewGameMatWarp ; apply to StartNewGameDebug only
+/home/oreki/pokered/engine/overworld/special_warps.asm:14:.setNewGameMatWarp
+/home/oreki/pokered/engine/overworld/special_warps.asm:31:LoadSpecialWarpData:
+/home/oreki/pokered/engine/overworld/special_warps.asm:35:	ld hl, TradeCenterPlayerWarp
+/home/oreki/pokered/engine/overworld/special_warps.asm:38:	jr z, .copyWarpData
+/home/oreki/pokered/engine/overworld/special_warps.asm:39:	ld hl, TradeCenterFriendWarp
+/home/oreki/pokered/engine/overworld/special_warps.asm:40:	jr .copyWarpData
+/home/oreki/pokered/engine/overworld/special_warps.asm:44:	ld hl, ColosseumPlayerWarp
+/home/oreki/pokered/engine/overworld/special_warps.asm:47:	jr z, .copyWarpData
+/home/oreki/pokered/engine/overworld/special_warps.asm:48:	ld hl, ColosseumFriendWarp
+/home/oreki/pokered/engine/overworld/special_warps.asm:49:	jr .copyWarpData
+/home/oreki/pokered/engine/overworld/special_warps.asm:54:	jr nz, .notNewGameWarp
+/home/oreki/pokered/engine/overworld/special_warps.asm:56:	jr nz, .notNewGameWarp
+/home/oreki/pokered/engine/overworld/special_warps.asm:57:	ld hl, NewGameWarp
+/home/oreki/pokered/engine/overworld/special_warps.asm:58:.copyWarpData
+/home/oreki/pokered/engine/overworld/special_warps.asm:61:.copyWarpDataLoop
+/home/oreki/pokered/engine/overworld/special_warps.asm:66:	jr nz, .copyWarpDataLoop
+/home/oreki/pokered/engine/overworld/special_warps.asm:71:.notNewGameWarp
+/home/oreki/pokered/engine/overworld/special_warps.asm:75:	jr nz, .usedDungeonWarp
+/home/oreki/pokered/engine/overworld/special_warps.asm:80:	jr .usedFlyWarp
+/home/oreki/pokered/engine/overworld/special_warps.asm:81:.usedDungeonWarp
+/home/oreki/pokered/engine/overworld/special_warps.asm:84:	ld a, [wDungeonWarpDestinationMap]
+/home/oreki/pokered/engine/overworld/special_warps.asm:87:	ld a, [wWhichDungeonWarp]
+/home/oreki/pokered/engine/overworld/special_warps.asm:89:	ld hl, DungeonWarpList
+/home/oreki/pokered/engine/overworld/special_warps.asm:92:	ld [wDungeonWarpDataEntrySize], a
+/home/oreki/pokered/engine/overworld/special_warps.asm:93:.dungeonWarpListLoop
+/home/oreki/pokered/engine/overworld/special_warps.asm:96:	jr z, .matchedDungeonWarpDestinationMap
+/home/oreki/pokered/engine/overworld/special_warps.asm:98:	jr .nextDungeonWarp
+/home/oreki/pokered/engine/overworld/special_warps.asm:99:.matchedDungeonWarpDestinationMap
+/home/oreki/pokered/engine/overworld/special_warps.asm:102:	jr z, .matchedDungeonWarpID
+/home/oreki/pokered/engine/overworld/special_warps.asm:103:.nextDungeonWarp
+/home/oreki/pokered/engine/overworld/special_warps.asm:104:	ld a, [wDungeonWarpDataEntrySize]
+/home/oreki/pokered/engine/overworld/special_warps.asm:107:	jr .dungeonWarpListLoop
+/home/oreki/pokered/engine/overworld/special_warps.asm:108:.matchedDungeonWarpID
+/home/oreki/pokered/engine/overworld/special_warps.asm:109:	ld hl, DungeonWarpData
+/home/oreki/pokered/engine/overworld/special_warps.asm:111:	jr .copyWarpData2
+/home/oreki/pokered/engine/overworld/special_warps.asm:114:.usedFlyWarp
+/home/oreki/pokered/engine/overworld/special_warps.asm:117:	ld hl, FlyWarpDataPtr
+/home/oreki/pokered/engine/overworld/special_warps.asm:118:.flyWarpDataPtrLoop
+/home/oreki/pokered/engine/overworld/special_warps.asm:122:	jr z, .foundFlyWarpMatch
+/home/oreki/pokered/engine/overworld/special_warps.asm:125:	jr .flyWarpDataPtrLoop
+/home/oreki/pokered/engine/overworld/special_warps.asm:126:.foundFlyWarpMatch
+/home/oreki/pokered/engine/overworld/special_warps.asm:130:.copyWarpData2
+/home/oreki/pokered/engine/overworld/special_warps.asm:133:.copyWarpDataLoop2
+/home/oreki/pokered/engine/overworld/special_warps.asm:138:	jr nz, .copyWarpDataLoop2
+/home/oreki/pokered/engine/overworld/special_warps.asm:142:	ld [wYOffsetSinceLastSpecialWarp], a
+/home/oreki/pokered/engine/overworld/special_warps.asm:143:	ld [wXOffsetSinceLastSpecialWarp], a
+/home/oreki/pokered/engine/overworld/special_warps.asm:145:	ld [wDestinationWarpID], a
+/home/oreki/pokered/engine/events/hidden_events/safari_game.asm:49:	ldh [hWarpDestinationMap], a
+/home/oreki/pokered/engine/events/hidden_events/safari_game.asm:51:	ld [wDestinationWarpID], a
+/home/oreki/pokered/engine/events/elevator.asm:24:	ld hl, wElevatorWarpMaps
+/home/oreki/pokered/engine/events/elevator.asm:34:	ld hl, wWarpEntries
+/home/oreki/pokered/engine/events/elevator.asm:35:	call .UpdateWarp
+/home/oreki/pokered/engine/events/elevator.asm:37:.UpdateWarp
+/home/oreki/pokered/home/overworld.asm:6:EnterMap::
+/home/oreki/pokered/home/overworld.asm:10:	call LoadMapData
+/home/oreki/pokered/home/overworld.asm:11:	farcall ClearVariablesOnEnterMap
+/home/oreki/pokered/home/overworld.asm:26:	jr z, .didNotEnterUsingFlyWarpOrDungeonWarp
+/home/oreki/pokered/home/overworld.asm:28:	farcall EnterMapAnim
+/home/oreki/pokered/home/overworld.asm:30:.didNotEnterUsingFlyWarpOrDungeonWarp
+/home/oreki/pokered/home/overworld.asm:56:	jp nz, WarpFound2
+/home/oreki/pokered/home/overworld.asm:60:	jp nz, WarpFound2
+/home/oreki/pokered/home/overworld.asm:63:	jp nz, HandleFlyWarpOrDungeonWarp
+/home/oreki/pokered/home/overworld.asm:120:	call PrepareForSpecialWarp
+/home/oreki/pokered/home/overworld.asm:126:	jp EnterMap
+/home/oreki/pokered/home/overworld.asm:254:	call ExtraWarpCheck ; sets carry if there is a potential to warp
+/home/oreki/pokered/home/overworld.asm:256:	jp c, CheckWarpsCollision
+/home/oreki/pokered/home/overworld.asm:312:	jp nz, WarpFound2
+/home/oreki/pokered/home/overworld.asm:316:	jp nz, CheckWarpsNoCollision
+/home/oreki/pokered/home/overworld.asm:325:	jp nc, CheckWarpsNoCollision ; check for warps if there was no battle
+/home/oreki/pokered/home/overworld.asm:353:	jp EnterMap
+/home/oreki/pokered/home/overworld.asm:391:CheckWarpsNoCollision::
+/home/oreki/pokered/home/overworld.asm:392:	ld a, [wNumberOfWarps]
+/home/oreki/pokered/home/overworld.asm:395:	ld a, [wNumberOfWarps]
+/home/oreki/pokered/home/overworld.asm:402:	ld hl, wWarpEntries
+/home/oreki/pokered/home/overworld.asm:403:CheckWarpsNoCollisionLoop::
+/home/oreki/pokered/home/overworld.asm:406:	jr nz, CheckWarpsNoCollisionRetry1
+/home/oreki/pokered/home/overworld.asm:409:	jr nz, CheckWarpsNoCollisionRetry2
+/home/oreki/pokered/home/overworld.asm:415:	farcall IsPlayerStandingOnDoorTileOrWarpTile
+/home/oreki/pokered/home/overworld.asm:418:	jr c, WarpFound1 ; jump if standing on door or warp
+/home/oreki/pokered/home/overworld.asm:421:	call ExtraWarpCheck
+/home/oreki/pokered/home/overworld.asm:424:	jr nc, CheckWarpsNoCollisionRetry2
+/home/oreki/pokered/home/overworld.asm:428:	jr nz, WarpFound1
+/home/oreki/pokered/home/overworld.asm:436:	jr z, CheckWarpsNoCollisionRetry2 ; if directional buttons aren't being pressed, do not pass through the warp
+/home/oreki/pokered/home/overworld.asm:437:	jr WarpFound1
+/home/oreki/pokered/home/overworld.asm:440:CheckWarpsCollision::
+/home/oreki/pokered/home/overworld.asm:441:	ld a, [wNumberOfWarps]
+/home/oreki/pokered/home/overworld.asm:443:	ld hl, wWarpEntries
+/home/oreki/pokered/home/overworld.asm:456:	ld [wDestinationWarpID], a
+/home/oreki/pokered/home/overworld.asm:458:	ldh [hWarpDestinationMap], a
+/home/oreki/pokered/home/overworld.asm:459:	jr WarpFound2
+/home/oreki/pokered/home/overworld.asm:469:CheckWarpsNoCollisionRetry1::
+/home/oreki/pokered/home/overworld.asm:471:CheckWarpsNoCollisionRetry2::
+/home/oreki/pokered/home/overworld.asm:474:	jp ContinueCheckWarpsNoCollisionLoop
+/home/oreki/pokered/home/overworld.asm:476:WarpFound1::
+/home/oreki/pokered/home/overworld.asm:478:	ld [wDestinationWarpID], a
+/home/oreki/pokered/home/overworld.asm:480:	ldh [hWarpDestinationMap], a
+/home/oreki/pokered/home/overworld.asm:482:WarpFound2::
+/home/oreki/pokered/home/overworld.asm:483:	ld a, [wNumberOfWarps]
+/home/oreki/pokered/home/overworld.asm:485:	ld [wWarpedFromWhichWarp], a ; save ID of used warp
+/home/oreki/pokered/home/overworld.asm:487:	ld [wWarpedFromWhichMap], a
+/home/oreki/pokered/home/overworld.asm:495:	ldh a, [hWarpDestinationMap]
+/home/oreki/pokered/home/overworld.asm:509:	ldh a, [hWarpDestinationMap]
+/home/oreki/pokered/home/overworld.asm:514:	farcall IsPlayerStandingOnWarpPadOrHole
+/home/oreki/pokered/home/overworld.asm:515:	ld a, [wStandingOnWarpPadOrHole]
+/home/oreki/pokered/home/overworld.asm:517:	jr nz, .notWarpPad
+/home/oreki/pokered/home/overworld.asm:523:.notWarpPad
+/home/oreki/pokered/home/overworld.asm:540:	jp EnterMap
+/home/oreki/pokered/home/overworld.asm:542:ContinueCheckWarpsNoCollisionLoop::
+/home/oreki/pokered/home/overworld.asm:545:	jp nz, CheckWarpsNoCollisionLoop
+/home/oreki/pokered/home/overworld.asm:676:	call LoadMapHeader
+/home/oreki/pokered/home/overworld.asm:714:; the "sometimes" qualification is necessary because of CheckWarpsNoCollision's behavior
+/home/oreki/pokered/home/overworld.asm:719:ExtraWarpCheck::
+/home/oreki/pokered/home/overworld.asm:744:	ld hl, IsWarpTileInFrontOfPlayer
+/home/oreki/pokered/home/overworld.asm:746:	ld b, BANK(IsWarpTileInFrontOfPlayer)
+/home/oreki/pokered/home/overworld.asm:750:	farcall IsPlayerStandingOnWarp ; for enabling warp testing after collisions
+/home/oreki/pokered/home/overworld.asm:764:	ld a, BANK(ResetStatusAndHalveMoneyOnBlackout) ; also BANK(PrepareForSpecialWarp) and BANK(SpecialEnterMap)
+/home/oreki/pokered/home/overworld.asm:768:	call PrepareForSpecialWarp
+/home/oreki/pokered/home/overworld.asm:770:	jp SpecialEnterMap
+/home/oreki/pokered/home/overworld.asm:783:HandleFlyWarpOrDungeonWarp::
+/home/oreki/pokered/home/overworld.asm:795:	ld a, BANK(PrepareForSpecialWarp)
+/home/oreki/pokered/home/overworld.asm:798:	call PrepareForSpecialWarp
+/home/oreki/pokered/home/overworld.asm:799:	jp SpecialEnterMap
+/home/oreki/pokered/home/overworld.asm:1529:	ld hl, wXOffsetSinceLastSpecialWarp
+/home/oreki/pokered/home/overworld.asm:1540:	ld hl, wXOffsetSinceLastSpecialWarp
+/home/oreki/pokered/home/overworld.asm:1555:	ld hl, wYOffsetSinceLastSpecialWarp
+/home/oreki/pokered/home/overworld.asm:1567:	ld hl, wYOffsetSinceLastSpecialWarp
+/home/oreki/pokered/home/overworld.asm:2005:LoadMapHeader::
+/home/oreki/pokered/home/overworld.asm:2084:	ld [wNumberOfWarps], a
+/home/oreki/pokered/home/overworld.asm:2088:	ld de, wWarpEntries
+/home/oreki/pokered/home/overworld.asm:2294:LoadMapData::
+/home/oreki/pokered/home/overworld.asm:2309:	call LoadMapHeader
+/home/oreki/pokered/home/overworld.asm:2429:LoadDestinationWarpPosition::
+/home/oreki/pokered/home/predef.asm:9:	; A hack for LoadDestinationWarpPosition.
+/home/oreki/pokered/data/maps/special_warps.asm:4:DungeonWarpList:
+/home/oreki/pokered/data/maps/special_warps.asm:26:DungeonWarpData:
+/home/oreki/pokered/data/maps/special_warps.asm:47:NewGameWarp:
+/home/oreki/pokered/data/maps/special_warps.asm:49:TradeCenterPlayerWarp:
+/home/oreki/pokered/data/maps/special_warps.asm:51:TradeCenterFriendWarp:
+/home/oreki/pokered/data/maps/special_warps.asm:53:ColosseumPlayerWarp:
+/home/oreki/pokered/data/maps/special_warps.asm:55:ColosseumFriendWarp:
+/home/oreki/pokered/data/maps/special_warps.asm:64:FlyWarpDataPtr:
+/home/oreki/pokered/data/predef_pointers.asm:101:	add_predef EnterMapAnim, $1E ; wrong bank
+/home/oreki/pokered/data/text/text_5.asm:38:_WarpToLastPokemonCenterText::
+/home/oreki/pokered/data/text/text_5.asm:39:	text "Warp to the last"
+/home/oreki/pokered/data/tilesets/warp_carpet_tile_ids.asm:1:WarpTileListPointers:
+/home/oreki/pokered/data/tilesets/warp_carpet_tile_ids.asm:2:	dw .FacingDownWarpTiles
+/home/oreki/pokered/data/tilesets/warp_carpet_tile_ids.asm:3:	dw .FacingUpWarpTiles
+/home/oreki/pokered/data/tilesets/warp_carpet_tile_ids.asm:4:	dw .FacingLeftWarpTiles
+/home/oreki/pokered/data/tilesets/warp_carpet_tile_ids.asm:5:	dw .FacingRightWarpTiles
+/home/oreki/pokered/data/tilesets/warp_carpet_tile_ids.asm:14:.FacingDownWarpTiles:
+/home/oreki/pokered/data/tilesets/warp_carpet_tile_ids.asm:17:.FacingUpWarpTiles:
+/home/oreki/pokered/data/tilesets/warp_carpet_tile_ids.asm:20:.FacingLeftWarpTiles:
+/home/oreki/pokered/data/tilesets/warp_carpet_tile_ids.asm:23:.FacingRightWarpTiles:
+/home/oreki/pokered/data/tilesets/warp_pad_hole_tile_ids.asm:1:WarpPadAndHoleData:
+/home/oreki/pokered/data/tilesets/warp_pad_hole_tile_ids.asm:2:	; tileset id, tile id, value for [wStandingOnWarpPadOrHole]
+/home/oreki/pokered/data/tilesets/warp_tile_ids.asm:1:WarpTileIDPointers:
+/home/oreki/pokered/data/tilesets/warp_tile_ids.asm:3:	dw .OverworldWarpTileIDs
+/home/oreki/pokered/data/tilesets/warp_tile_ids.asm:4:	dw .RedsHouse1WarpTileIDs
+/home/oreki/pokered/data/tilesets/warp_tile_ids.asm:5:	dw .MartWarpTileIDs
+/home/oreki/pokered/data/tilesets/warp_tile_ids.asm:6:	dw .ForestWarpTileIDs
+/home/oreki/pokered/data/tilesets/warp_tile_ids.asm:7:	dw .RedsHouse2WarpTileIDs
+/home/oreki/pokered/data/tilesets/warp_tile_ids.asm:8:	dw .DojoWarpTileIDs
+/home/oreki/pokered/data/tilesets/warp_tile_ids.asm:9:	dw .PokecenterWarpTileIDs
+/home/oreki/pokered/data/tilesets/warp_tile_ids.asm:10:	dw .GymWarpTileIDs
+/home/oreki/pokered/data/tilesets/warp_tile_ids.asm:11:	dw .HouseWarpTileIDs
+/home/oreki/pokered/data/tilesets/warp_tile_ids.asm:12:	dw .ForestGateWarpTileIDs
+/home/oreki/pokered/data/tilesets/warp_tile_ids.asm:13:	dw .MuseumWarpTileIDs
+/home/oreki/pokered/data/tilesets/warp_tile_ids.asm:14:	dw .UndergroundWarpTileIDs
+/home/oreki/pokered/data/tilesets/warp_tile_ids.asm:15:	dw .GateWarpTileIDs
+/home/oreki/pokered/data/tilesets/warp_tile_ids.asm:16:	dw .ShipWarpTileIDs
+/home/oreki/pokered/data/tilesets/warp_tile_ids.asm:17:	dw .ShipPortWarpTileIDs
+/home/oreki/pokered/data/tilesets/warp_tile_ids.asm:18:	dw .CemeteryWarpTileIDs
+/home/oreki/pokered/data/tilesets/warp_tile_ids.asm:19:	dw .InteriorWarpTileIDs
+/home/oreki/pokered/data/tilesets/warp_tile_ids.asm:20:	dw .CavernWarpTileIDs
+/home/oreki/pokered/data/tilesets/warp_tile_ids.asm:21:	dw .LobbyWarpTileIDs
+/home/oreki/pokered/data/tilesets/warp_tile_ids.asm:22:	dw .MansionWarpTileIDs
+/home/oreki/pokered/data/tilesets/warp_tile_ids.asm:23:	dw .LabWarpTileIDs
+/home/oreki/pokered/data/tilesets/warp_tile_ids.asm:24:	dw .ClubWarpTileIDs
+/home/oreki/pokered/data/tilesets/warp_tile_ids.asm:25:	dw .FacilityWarpTileIDs
+/home/oreki/pokered/data/tilesets/warp_tile_ids.asm:26:	dw .PlateauWarpTileIDs
+/home/oreki/pokered/data/tilesets/warp_tile_ids.asm:36:.OverworldWarpTileIDs:
+/home/oreki/pokered/data/tilesets/warp_tile_ids.asm:39:.ForestGateWarpTileIDs:
+/home/oreki/pokered/data/tilesets/warp_tile_ids.asm:40:.MuseumWarpTileIDs:
+/home/oreki/pokered/data/tilesets/warp_tile_ids.asm:41:.GateWarpTileIDs:
+/home/oreki/pokered/data/tilesets/warp_tile_ids.asm:44:.RedsHouse1WarpTileIDs:
+/home/oreki/pokered/data/tilesets/warp_tile_ids.asm:45:.RedsHouse2WarpTileIDs:
+/home/oreki/pokered/data/tilesets/warp_tile_ids.asm:48:.MartWarpTileIDs:
+/home/oreki/pokered/data/tilesets/warp_tile_ids.asm:49:.PokecenterWarpTileIDs:
+/home/oreki/pokered/data/tilesets/warp_tile_ids.asm:52:.ForestWarpTileIDs:
+/home/oreki/pokered/data/tilesets/warp_tile_ids.asm:55:.DojoWarpTileIDs:
+/home/oreki/pokered/data/tilesets/warp_tile_ids.asm:56:.GymWarpTileIDs:
+/home/oreki/pokered/data/tilesets/warp_tile_ids.asm:59:.HouseWarpTileIDs:
+/home/oreki/pokered/data/tilesets/warp_tile_ids.asm:62:.ShipWarpTileIDs:
+/home/oreki/pokered/data/tilesets/warp_tile_ids.asm:65:.InteriorWarpTileIDs:
+/home/oreki/pokered/data/tilesets/warp_tile_ids.asm:68:.CavernWarpTileIDs:
+/home/oreki/pokered/data/tilesets/warp_tile_ids.asm:71:.LobbyWarpTileIDs:
+/home/oreki/pokered/data/tilesets/warp_tile_ids.asm:74:.MansionWarpTileIDs:
+/home/oreki/pokered/data/tilesets/warp_tile_ids.asm:77:.LabWarpTileIDs:
+/home/oreki/pokered/data/tilesets/warp_tile_ids.asm:80:.FacilityWarpTileIDs:
+/home/oreki/pokered/data/tilesets/warp_tile_ids.asm:83:.CemeteryWarpTileIDs:
+/home/oreki/pokered/data/tilesets/warp_tile_ids.asm:86:.UndergroundWarpTileIDs:
+/home/oreki/pokered/data/tilesets/warp_tile_ids.asm:89:.PlateauWarpTileIDs:
+/home/oreki/pokered/data/tilesets/warp_tile_ids.asm:92:.ShipPortWarpTileIDs:
+/home/oreki/pokered/data/tilesets/warp_tile_ids.asm:93:.ClubWarpTileIDs:

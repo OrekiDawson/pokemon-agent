@@ -1,0 +1,16 @@
+{
+  "map": "Route 2",
+  "map_id": 13,
+  "x": 3,
+  "y": 44,
+  "facing": "down",
+  "frame": 2920,
+  "keys": [],
+  "battle": false,
+  "dialog": false,
+  "species": "Squirtle",
+  "level": 6,
+  "hp": 22,
+  "max_hp": 22,
+  "status": "OK"
+}

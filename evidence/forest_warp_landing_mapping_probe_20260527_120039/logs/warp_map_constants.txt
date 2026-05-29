@@ -1,0 +1,39 @@
+/home/oreki/pokered/data/maps/town_map_order.asm:6:	db VIRIDIAN_FOREST
+/home/oreki/pokered/data/maps/toggleable_objects.asm:215:	toggleable_objects_for VIRIDIAN_FOREST
+/home/oreki/pokered/data/maps/songs.asm:50:	db MUSIC_CITIES1, BANK(Music_Cities1) ; VIRIDIAN_FOREST_NORTH_GATE
+/home/oreki/pokered/data/maps/songs.asm:53:	db MUSIC_CITIES1, BANK(Music_Cities1) ; VIRIDIAN_FOREST_SOUTH_GATE
+/home/oreki/pokered/data/maps/songs.asm:54:	db MUSIC_DUNGEON2, BANK(Music_Dungeon2) ; VIRIDIAN_FOREST
+/home/oreki/pokered/data/maps/dungeon_maps.asm:9:	db VIRIDIAN_FOREST
+/home/oreki/pokered/data/maps/headers/ViridianForestNorthGate.asm:1:	map_header ViridianForestNorthGate, VIRIDIAN_FOREST_NORTH_GATE, FOREST_GATE, 0
+/home/oreki/pokered/data/maps/headers/ViridianForestSouthGate.asm:1:	map_header ViridianForestSouthGate, VIRIDIAN_FOREST_SOUTH_GATE, FOREST_GATE, 0
+/home/oreki/pokered/data/maps/headers/ViridianForest.asm:1:	map_header ViridianForest, VIRIDIAN_FOREST, FOREST, 0
+/home/oreki/pokered/data/maps/town_map_entries.asm:63:	indoor_map VIRIDIAN_FOREST,     2,  4, ViridianForestName
+/home/oreki/pokered/data/maps/objects/Route2.asm:10:	warp_event  3, 11, VIRIDIAN_FOREST_NORTH_GATE, 2
+/home/oreki/pokered/data/maps/objects/Route2.asm:14:	warp_event  3, 43, VIRIDIAN_FOREST_SOUTH_GATE, 3
+/home/oreki/pokered/data/maps/objects/ViridianForestNorthGate.asm:11:	warp_event  4,  7, VIRIDIAN_FOREST, 1
+/home/oreki/pokered/data/maps/objects/ViridianForestNorthGate.asm:12:	warp_event  5,  7, VIRIDIAN_FOREST, 1
+/home/oreki/pokered/data/maps/objects/ViridianForestNorthGate.asm:20:	def_warps_to VIRIDIAN_FOREST_NORTH_GATE
+/home/oreki/pokered/data/maps/objects/ViridianForestSouthGate.asm:9:	warp_event  4,  0, VIRIDIAN_FOREST, 4
+/home/oreki/pokered/data/maps/objects/ViridianForestSouthGate.asm:10:	warp_event  5,  0, VIRIDIAN_FOREST, 5
+/home/oreki/pokered/data/maps/objects/ViridianForestSouthGate.asm:20:	def_warps_to VIRIDIAN_FOREST_SOUTH_GATE
+/home/oreki/pokered/data/maps/objects/ViridianForest.asm:15:	warp_event  1,  0, VIRIDIAN_FOREST_NORTH_GATE, 3
+/home/oreki/pokered/data/maps/objects/ViridianForest.asm:16:	warp_event  2,  0, VIRIDIAN_FOREST_NORTH_GATE, 4
+/home/oreki/pokered/data/maps/objects/ViridianForest.asm:17:	warp_event 15, 47, VIRIDIAN_FOREST_SOUTH_GATE, 2
+/home/oreki/pokered/data/maps/objects/ViridianForest.asm:18:	warp_event 16, 47, VIRIDIAN_FOREST_SOUTH_GATE, 2
+/home/oreki/pokered/data/maps/objects/ViridianForest.asm:19:	warp_event 17, 47, VIRIDIAN_FOREST_SOUTH_GATE, 2
+/home/oreki/pokered/data/maps/objects/ViridianForest.asm:20:	warp_event 18, 47, VIRIDIAN_FOREST_SOUTH_GATE, 2
+/home/oreki/pokered/data/maps/objects/ViridianForest.asm:40:	def_warps_to VIRIDIAN_FOREST
+/home/oreki/pokered/constants/toggle_constants.asm:188:	toggle_consts_for VIRIDIAN_FOREST
+/home/oreki/pokered/constants/toggle_constants.asm:189:	const TOGGLE_VIRIDIAN_FOREST_ITEM_1        ; 64 X
+/home/oreki/pokered/constants/toggle_constants.asm:190:	const TOGGLE_VIRIDIAN_FOREST_ITEM_2        ; 65 X
+/home/oreki/pokered/constants/toggle_constants.asm:191:	const TOGGLE_VIRIDIAN_FOREST_ITEM_3        ; 66 X
+/home/oreki/pokered/constants/event_constants.asm:529:	const EVENT_BEAT_VIRIDIAN_FOREST_TRAINER_0
+/home/oreki/pokered/constants/event_constants.asm:530:	const EVENT_BEAT_VIRIDIAN_FOREST_TRAINER_1
+/home/oreki/pokered/constants/event_constants.asm:531:	const EVENT_BEAT_VIRIDIAN_FOREST_TRAINER_2
+/home/oreki/pokered/constants/map_constants.asm:83:	map_const VIRIDIAN_FOREST_NORTH_GATE,     5,  4 ; $2F
+/home/oreki/pokered/constants/map_constants.asm:86:	map_const VIRIDIAN_FOREST_SOUTH_GATE,     5,  4 ; $32
+/home/oreki/pokered/constants/map_constants.asm:89:	map_const VIRIDIAN_FOREST,               17, 24 ; $33
+/home/oreki/pokered/constants/map_constants.asm:90:	end_indoor_group VIRIDIAN_FOREST
+/home/oreki/pokered/scripts/ViridianForest.asm:36:	trainer EVENT_BEAT_VIRIDIAN_FOREST_TRAINER_0, 4, ViridianForestYoungster2BattleText, ViridianForestYoungster2EndBattleText, ViridianForestYoungster2AfterBattleText
+/home/oreki/pokered/scripts/ViridianForest.asm:38:	trainer EVENT_BEAT_VIRIDIAN_FOREST_TRAINER_1, 4, ViridianForestYoungster3BattleText, ViridianForestYoungster3EndBattleText, ViridianForestYoungster3AfterBattleText
+/home/oreki/pokered/scripts/ViridianForest.asm:40:	trainer EVENT_BEAT_VIRIDIAN_FOREST_TRAINER_2, 1, ViridianForestYoungster4BattleText, ViridianForestYoungster4EndBattleText, ViridianForestYoungster4AfterBattleText

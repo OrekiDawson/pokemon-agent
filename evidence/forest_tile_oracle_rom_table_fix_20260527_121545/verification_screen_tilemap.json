@@ -1,0 +1,53 @@
+{
+  "map": "Viridian Forest",
+  "xy": [
+    17,
+    47
+  ],
+  "forest_debug_valid": true,
+  "oracle_source": "engine_screen_tilemap",
+  "engine_screen_tilemap_adjacent": {
+    "up": {
+      "screen_coord": [
+        8,
+        7
+      ],
+      "tile_id": "0x0A",
+      "tile_id_raw": 10,
+      "tile_collision_passable": false,
+      "canary_allowed": false
+    },
+    "down": {
+      "screen_coord": [
+        8,
+        11
+      ],
+      "tile_id": "0x33",
+      "tile_id_raw": 51,
+      "tile_collision_passable": false,
+      "canary_allowed": false
+    },
+    "left": {
+      "screen_coord": [
+        6,
+        9
+      ],
+      "tile_id": "0x30",
+      "tile_id_raw": 48,
+      "tile_collision_passable": true,
+      "canary_allowed": true
+    },
+    "right": {
+      "screen_coord": [
+        10,
+        9
+      ],
+      "tile_id": "0x30",
+      "tile_id_raw": 48,
+      "tile_collision_passable": true,
+      "canary_allowed": true
+    }
+  },
+  "matches_verified_left_canary": true,
+  "matches_verified_right_canary": true
+}

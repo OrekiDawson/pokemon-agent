@@ -1170,6 +1170,19 @@ class RedBlueMemoryReader(GameMemoryReader):
             text_bytes_hex = None
             decode_status = "read_failed"
 
+        # dialog_confidence: distinguishes active text from stale parser flags.
+        #   - visible_confirmed: parser shows text + screenshot confirmed (caller sets via vision)
+        #   - parser_only: parser reports text but screenshot unconfirmed
+        #   - stale_suspect: wJoyIgnore bit5=1 but wFontLoaded bit0=0 and text buffer empty/garbage
+        font_active = bool(joy_ignore & 0x20)  # wFontLoaded bit5 = text-engine-active signal
+        text_has_content = decoded_text is not None and decode_status == "ok"
+        if font_active and text_has_content:
+            dialog_confidence = "parser_only"  # screenshot validation is caller responsibility
+        elif font_active and not text_has_content:
+            dialog_confidence = "stale_suspect"
+        else:
+            dialog_confidence = "visible_confirmed"  # no dialog, no textbox
+
         return {
             "active": in_dialog,
             "text_box_id": text_box,
@@ -1179,6 +1192,7 @@ class RedBlueMemoryReader(GameMemoryReader):
             "text_addr": ADDR_STRING_BUFFER,
             "text_bytes_hex": text_bytes_hex,
             "text_decode_status": decode_status,
+            "dialog_confidence": dialog_confidence,
         }
 
     def read_gen1_input_debug(self) -> Dict[str, Any]:
@@ -1279,8 +1293,15 @@ class RedBlueMemoryReader(GameMemoryReader):
             return keys
 
         # Decision gate
-        if wjoy_ignore & 0x20 or bit_disable_joypad:
+        # NEW LOGIC: text_engine_active requires BOTH wFontLoaded bit0 AND text_box_id!=0.
+        # This prevents stale wJoyIgnore bit5 from causing false joypad_masked conclusions.
+        # In these .state anchors, wJoyIgnore=0xA0 is a save-state artifact; wFontLoaded=0 means
+        # the text engine is not running, so bit5 should not block movement.
+        text_engine_active = bool(wfont_loaded & 0x01) and text_box_id != 0
+        if (wjoy_ignore & 0x20 and text_engine_active) or bit_disable_joypad:
             gate_conclusion = "joypad_masked"
+        elif wjoy_ignore & 0x20 and not text_engine_active:
+            gate_conclusion = "stale_wjoy_ignore_bit5"
         elif sim_joypad_index != 0 or bit_scripted_movement_state:
             gate_conclusion = "scripted_input_queue"
         elif battle_type != 0 and bit_battle_over:

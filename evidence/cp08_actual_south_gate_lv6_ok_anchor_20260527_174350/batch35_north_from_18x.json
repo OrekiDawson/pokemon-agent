@@ -1,0 +1,15 @@
+{
+  "map": "Viridian Forest",
+  "map_id": 51,
+  "x": 18,
+  "y": 5,
+  "facing": "up",
+  "frame": 29657,
+  "battle": false,
+  "dialog": false,
+  "species": "Squirtle",
+  "level": 7,
+  "hp": 24,
+  "max_hp": 24,
+  "status": "OK"
+}

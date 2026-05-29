@@ -1,0 +1,16 @@
+{
+  "map": "Viridian Forest South Gate",
+  "map_id": 50,
+  "x": 4,
+  "y": 7,
+  "facing": "up",
+  "frame": 5120,
+  "keys": [],
+  "battle": false,
+  "dialog": false,
+  "species": "Squirtle",
+  "level": 6,
+  "hp": 22,
+  "max_hp": 22,
+  "status": "OK"
+}

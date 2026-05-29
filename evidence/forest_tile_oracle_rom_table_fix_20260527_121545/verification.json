@@ -1,0 +1,77 @@
+{
+  "timestamp": "20260527_122015",
+  "map": "Viridian Forest",
+  "xy": [
+    17,
+    47
+  ],
+  "facing": "up",
+  "tile_under_player_raw": 13,
+  "tile_under_player": "0x0D",
+  "forest_debug_valid": true,
+  "tileset_block_table_loaded": true,
+  "wram_tileset_blocks_ptr": "0x0808",
+  "adjacent": {
+    "up": {
+      "coord": [
+        17,
+        46
+      ],
+      "in_bounds": true,
+      "block_id": "0x03",
+      "subtile_coord": [
+        1,
+        0
+      ],
+      "tile_id": "0x0A",
+      "tile_collision_passable": false,
+      "canary_allowed": false,
+      "classification": "blocked_by_tile_collision"
+    },
+    "down": {
+      "coord": [
+        17,
+        48
+      ],
+      "in_bounds": false,
+      "block_id": null,
+      "subtile_coord": null,
+      "tile_id": null,
+      "tile_collision_passable": null,
+      "canary_allowed": false,
+      "classification": "out_of_walk_grid"
+    },
+    "left": {
+      "coord": [
+        16,
+        47
+      ],
+      "in_bounds": true,
+      "block_id": "0x03",
+      "subtile_coord": [
+        0,
+        1
+      ],
+      "tile_id": "0x00",
+      "tile_collision_passable": false,
+      "canary_allowed": false,
+      "classification": "blocked_by_tile_collision"
+    },
+    "right": {
+      "coord": [
+        18,
+        47
+      ],
+      "in_bounds": true,
+      "block_id": "0x03",
+      "subtile_coord": [
+        0,
+        1
+      ],
+      "tile_id": "0x00",
+      "tile_collision_passable": false,
+      "canary_allowed": false,
+      "classification": "blocked_by_tile_collision"
+    }
+  }
+}

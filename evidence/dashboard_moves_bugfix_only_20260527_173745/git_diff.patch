@@ -1,0 +1,14 @@
+diff --git a/pokemon_agent/dashboard/static/app.js b/pokemon_agent/dashboard/static/app.js
+index 3d529c0..26c1f77 100644
+--- a/pokemon_agent/dashboard/static/app.js
++++ b/pokemon_agent/dashboard/static/app.js
+@@ -328,7 +328,8 @@
+         if (mon.moves && mon.moves.length) {
+             var moves = document.createElement('div');
+             moves.className = 'team-moves';
+-            moves.textContent = mon.moves.join(' / ');
++            var moveNames = mon.moves.map(function(m) { return m.name || m; });
++            moves.textContent = moveNames.join(' / ');
+             card.appendChild(moves);
+         }
+ 

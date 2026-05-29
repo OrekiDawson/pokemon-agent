@@ -1,0 +1,24 @@
+38:ADDR_CUR_MAP_TILESET  = 0xD367  # wCurMapTileset
+44:ADDR_TILESET_BLOCKS_PTR = 0xD529  # wTilesetBlocksPtr (2 bytes LE) — pointer to block→4-tile decomposition table
+45:ADDR_TILESET_GFX_PTR   = 0xD52B  # wTilesetGfxPtr (2 bytes LE)
+46:ADDR_TILESET_COLL_PTR  = 0xD52D  # wTilesetCollisionPtr (2 bytes LE — UNRELIABLE, use COLLISION_TABLE_LOOKUP instead)
+501:TILESET_NAMES: Dict[int, str] = {
+526:TILESET_COLLISION_ADDR: Dict[int, int] = {
+963:    MAP_TILESET_LOOKUP: Dict[int, int] = {
+1010:    def read_forest_debug(self) -> Dict[str, Any]:
+1032:        tileset_id = self.emu.read_u8(ADDR_CUR_MAP_TILESET)
+1034:        tileset_name = TILESET_NAMES.get(tileset_id, f"unknown(0x{tileset_id:02X})")
+1040:        coll_addr = TILESET_COLLISION_ADDR.get(tileset_id, 0)
+1063:        wram_coll_ptr = self.emu.read_u16(ADDR_TILESET_COLL_PTR)
+1098:        expected_ts_id = self.MAP_TILESET_LOOKUP.get(map_id)
+1099:        expected_name = TILESET_NAMES.get(expected_ts_id, f"unknown({expected_ts_id})") if expected_ts_id is not None else None
+1101:        forest_debug_valid: bool
+1107:            forest_debug_valid = True
+1110:            forest_debug_valid = True
+1114:            forest_debug_valid = False
+1121:        # Each block encodes 4 tiles; read wTilesetBlocksPtr for block→tile decomposition.
+1137:            blocks_ptr = self.emu.read_u16(ADDR_TILESET_BLOCKS_PTR)
+1153:            def _decompose_tile(self_obj, block_id, subtile_x, subtile_y):
+1190:                actual_tile_id = _decompose_tile(self, block_id, subtile_x, subtile_y)
+1299:            "forest_debug_valid": forest_debug_valid,
+1300:            "forest_debug_gap": gap,

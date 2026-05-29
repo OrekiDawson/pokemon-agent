@@ -1,0 +1,90 @@
+# forest_warp_landing_mapping_gap — Verdict Report
+
+Date: 2026-05-27T12:00:39
+Exec: source collision probe (OBSERVE ONLY — no canary, no action)
+
+## Root Cause
+
+**wTilesetBlocksPtr (0xD529) is STALE after savestate reload.**
+
+The adjacent tile oracle's `_decompose_tile()` function reads from
+`wTilesetBlocksPtr` in WRAM (0xD529), which is set during `LoadTilesetHeader`
+and NOT refreshed after savestate. After loading `cp09_viridian_forest_south_entrance.state`,
+the pointer points to stale/non-FOREST block table data, returning WRONG tile IDs:
+
+| Direction | Runtime tile_id | Source-correct tile_id | Source-correct passable |
+|-----------|----------------|------------------------|------------------------|
+| under (player) | 0x0D           | 0x20                   | YES (Forest_Coll includes 0x20) |
+| up (in front)   | 0x0A           | 0x22                   | NO                      |
+| left           | 0x99           | 0x20                   | YES                     |
+| right          | 0x99           | 0x20                   | YES                     |
+
+**Important**: tile 0x20 is in Forest_Coll passable list, so the player CAN move
+LEFT and RIGHT from position (17,47). Only UP is genuinely blocked (tile 0x22
+is not passable — it's the top decorative half of the warp block).
+
+## Coordinate Mapping Verification
+
+**Warp coordinates ARE CORRECT.** No discrepancy between source and runtime:
+- Source: warp_event 17, 47, VIRIDIAN_FOREST_SOUTH_GATE, 2
+  → stored as (y=47, x=17) in wWarpEntries
+  → LoadDestinationWarpPosition copies (y=47, x=17) to player coords
+- Runtime: wXCoord=17, wYCoord=47 from GET /state
+  → **MATCH ✓**
+
+The SouthGate → Forest landing is correct for entry #4 (dest_warp_id=4, internal=3):
+- Lands at Forest warp entry #3 = (y=47, x=16 or 17)
+- Our state at (17,47) matches entry #4 use case
+
+## Collision Table Verification
+
+Forest_Coll at ROM 0x1765 read correctly:
+['0x1e', '0x20', '0x2e', '0x30', '0x34', '0x37', '0x39', '0x3a', '0x40', '0x51', '0x52', '0x5a', '0x5c', '0x5e', '0x5f']
+
+Tile 0x20 (source-correct landing tile) IS passable ✓
+Neither collision_addr nor coll_tile_list is affected — only block decomposition is stale.
+
+## Source Data Cross-Check
+
+Forest_Block at ROM 0x6A9FF (flat addr confirmed from Tilesets table + bank calc):
+Block 0x58 (warp landing block) = [0x21=TL, 0x22=TR, 0x20=BL, 0x20=BR]
+  → Player at subtile (1,1)=BR: tile 0x20 (PASSABLE)
+  → Front at subtile (1,0)=TR: tile 0x22 (NOT passable)
+
+Block 0x3B (neighbor right at 18,47) = [0x20, 0x20, 0x20, 0x20]
+  → ALL tiles passable 0x20 ✓
+
+Block 0x37 (neighbor left at 14-15,47) = [0x20, 0x20, 0x12, 0x13]
+  → Top half tile 0x20 (PASSABLE)
+
+Tilesets table confirmed at ROM 0xC7BE:
+  Entry 3 (FOREST): bank=0x1A, block_ptr=0x69FF → flat=0x6A9FF, coll_ptr=0x1765 ✓
+
+## Settlement
+
+1. **warp landing coordinates: CORRECT** (x=17, y=47 matches source)
+2. **adjacent tile oracle: DEFECTIVE** (stale wTilesetBlocksPtr)
+3. **Fix needed**: Replace `_decompose_tile` runtime WRAM read with ROM-based
+   tileset block table lookup from Tilesets table at 0xC7BE
+4. **Canary status**: NOT attempted (stop_no_buttons)
+5. **Able to move?**: From source data, player CAN move left or right from (17,47),
+   then up into forest interior. Oracle bug was masking this.
+6. **CP07 status**: Continued after fix
+
+## Required Fix
+
+In `_decompose_tile()`: replace
+  `blocks_ptr = self.emu.read_u16(ADDR_TILESET_BLOCKS_PTR)`
+with
+  `blocks_ptr = self._get_correct_blocks_ptr_from_tileset_table(tileset_id)`
+
+The tileset table at ROM 0xC7BE (24 entries × 12 bytes each) provides the correct
+block table address for each tileset. The function should:
+1. Read tileset_id from WRAM (0xD52F) — RELIABLE after savestate
+2. Look up table_base + tileset_id * 12 → bytes[1:3] = block_ptr
+3. Convert to flat ROM address using entry[0] as bank
+
+## Exit
+
+Exiting with stop_no_buttons. No canary, no actions performed.
+

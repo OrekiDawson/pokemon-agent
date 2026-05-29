@@ -1,0 +1,42 @@
+{
+  "round": 1,
+  "actions": [
+    "walk_up",
+    "wait_60×3"
+  ],
+  "state": {
+    "map": "Viridian Forest South Gate",
+    "map_id": 50,
+    "x": 4,
+    "y": 6,
+    "facing": "up",
+    "frame": 380,
+    "keys": [],
+    "battle": {
+      "in_battle": false,
+      "type": "none"
+    },
+    "dialog_active": false,
+    "party": [
+      {
+        "species": "Squirtle",
+        "level": 6,
+        "hp": 22,
+        "max_hp": 22,
+        "status": "OK"
+      }
+    ],
+    "bag": [
+      {
+        "id": 4,
+        "item": "Poke Ball",
+        "quantity": 5
+      },
+      {
+        "id": 11,
+        "item": "Antidote",
+        "quantity": 2
+      }
+    ]
+  }
+}

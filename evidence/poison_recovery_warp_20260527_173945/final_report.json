@@ -1,0 +1,33 @@
+{
+  "conclusion": "poison_step_damage_gap",
+  "reason": "Loaded state has Squirtle Lv6 HP=22/22 status=OK — no poison status present. 8 complete warp rounds showed zero HP change.",
+  "warp_rounds_completed": 8,
+  "map": "Route 2",
+  "map_id": 13,
+  "x": 3,
+  "y": 44,
+  "facing": "down",
+  "frame": 6120,
+  "keys": [],
+  "battle": false,
+  "dialog": false,
+  "species": "Squirtle",
+  "level": 6,
+  "hp": 22,
+  "max_hp": 22,
+  "status": "OK",
+  "bag": [
+    {
+      "id": 4,
+      "item": "Poke Ball",
+      "quantity": 5
+    },
+    {
+      "id": 11,
+      "item": "Antidote",
+      "quantity": 2
+    }
+  ],
+  "rounds_evidence": "/home/oreki/pokemon-agent/evidence/poison_recovery_warp_20260527_173945/rounds/",
+  "stop_or_go": "STOP_NO_BUTTONS"
+}

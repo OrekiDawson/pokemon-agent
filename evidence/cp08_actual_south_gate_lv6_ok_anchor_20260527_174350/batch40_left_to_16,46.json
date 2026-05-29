@@ -1,0 +1,16 @@
+{
+  "batch": 40,
+  "label": "left_to_16,46",
+  "x": 16,
+  "y": 46,
+  "map": "Viridian Forest",
+  "map_id": 51,
+  "frame": 80,
+  "battle": false,
+  "dialog": false,
+  "species": "Squirtle",
+  "level": 6,
+  "hp": 22,
+  "max_hp": 22,
+  "status": "OK"
+}

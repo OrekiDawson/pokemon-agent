@@ -1,0 +1,31 @@
+pokemon_agent/memory/red.py:31:ADDR_MAP_Y         = 0xD361   # player Y on map  (wYCoord)
+pokemon_agent/memory/red.py:32:ADDR_MAP_X         = 0xD362   # player X on map  (wXCoord)
+pokemon_agent/memory/red.py:51:ADDR_WARP_ENTRIES       = 0xD3AC  # wWarpEntries (MAX_WARP_EVENTS*4 = 128 bytes); each entry: Y, X, warp_id, map_id
+pokemon_agent/memory/red.py:839:        # false positives after warps: the engine clears bit 5 on dialog
+pokemon_agent/memory/red.py:898:        map_id = self.emu.read_u8(ADDR_MAP_ID)
+pokemon_agent/memory/red.py:900:            "map_id": map_id,
+pokemon_agent/memory/red.py:901:            "map_name": MAP_NAMES.get(map_id, f"Unknown Map ({map_id})"),
+pokemon_agent/memory/red.py:960:    # Hardcoded map_id → expected_tileset_id lookup (from Gen 1 pokered constants).
+pokemon_agent/memory/red.py:1024:        map_id = self.emu.read_u8(ADDR_MAP_ID)
+pokemon_agent/memory/red.py:1033:        map_name = MAP_NAMES.get(map_id, f"Unknown Map ({map_id})")
+pokemon_agent/memory/red.py:1078:        num_warps = self.emu.read_u8(ADDR_NUM_WARPS)
+pokemon_agent/memory/red.py:1079:        warp_under_player = None
+pokemon_agent/memory/red.py:1080:        nearest_warps = []
+pokemon_agent/memory/red.py:1081:        if num_warps and num_warps < 33:
+pokemon_agent/memory/red.py:1082:            for i in range(num_warps):
+pokemon_agent/memory/red.py:1084:                wy = self.emu.read_u8(base)      # Y coord of warp
+pokemon_agent/memory/red.py:1085:                wx = self.emu.read_u8(base + 1)  # X coord of warp
+pokemon_agent/memory/red.py:1086:                wid = self.emu.read_u8(base + 2) # warp ID (destination index)
+pokemon_agent/memory/red.py:1088:                entry = {"y": wy, "x": wx, "warp_id": wid, "dest_map_id": wmap}
+pokemon_agent/memory/red.py:1089:                # Check if player is on this warp
+pokemon_agent/memory/red.py:1091:                    warp_under_player = entry
+pokemon_agent/memory/red.py:1094:                    nearest_warps.append(entry)
+pokemon_agent/memory/red.py:1098:        expected_ts_id = self.MAP_TILESET_LOOKUP.get(map_id)
+pokemon_agent/memory/red.py:1112:            # Tileset mismatch: likely a save/state warp transition inconsistency
+pokemon_agent/memory/red.py:1268:            "map_id": map_id,
+pokemon_agent/memory/red.py:1287:            "num_warps": num_warps,
+pokemon_agent/memory/red.py:1288:            "warp_under_player": warp_under_player,
+pokemon_agent/memory/red.py:1289:            "nearest_warps": nearest_warps,
+pokemon_agent/memory/red.py:1291:            "map_id_raw": map_id,
+pokemon_agent/memory/red.py:1293:            "wCurMap_raw": map_id,
+pokemon_agent/state/builder.py:108:        lines.append(f"Location  : {map_info.get('map_name', '?')} (id={map_info.get('map_id')})")

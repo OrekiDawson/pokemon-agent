@@ -328,7 +328,8 @@
         if (mon.moves && mon.moves.length) {
             var moves = document.createElement('div');
             moves.className = 'team-moves';
-            moves.textContent = mon.moves.join(' / ');
+            var moveNames = mon.moves.map(function(m) { return m.name || m; });
+            moves.textContent = moveNames.join(' / ');
             card.appendChild(moves);
         }
 
