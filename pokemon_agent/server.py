@@ -217,7 +217,12 @@ async def _execute_action(action_str: str) -> None:
 
     if parts[0] == "wait" and len(parts) == 2:
         frames = int(parts[1])
+        # Release all keys before and after wait to clear any latch artifacts.
+        # The first release clears any stale held buttons from prior actions;
+        # the second release clears any buttons the game may have latched during ticks.
+        await _run_sync(_emulator.release_all_keys)
         await _run_sync(_emulator.tick_rendered, frames)
+        await _run_sync(_emulator.release_all_keys)
         return
 
     raise ValueError(f"Unknown action format: {action_str}")
