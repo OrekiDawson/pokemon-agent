@@ -413,38 +413,29 @@ async def screenshot_raw():
     _ensure_emulator()
     try:
         png_bytes = await _run_sync(_emulator.get_raw_screen_png)
+        # Read PNG dimensions from header (local scope only — not returned)
         import numpy as np
-        arr = np.frombuffer(png_bytes, dtype=np.uint8)
-        # Try to get pixel stats from raw PNG bytes without full decode
-        # Read PNG header to get dimensions
-        w = (arr[16] << 24) | (arr[17] << 16) | (arr[18] << 8) | arr[19]
-        h = (arr[20] << 24) | (arr[21] << 16) | (arr[22] << 8) | arr[23]
-        n = w * h
-        non_bg = 0
-        mean_r = mean_g = mean_b = 0
-        white = black = 0
-        # Compute non-background from emulator read_ppu_debug directly
-        ppu = _emulator.read_ppu_debug() if _emulator else {}
+        header = np.frombuffer(png_bytes[:24], dtype=np.uint8)
+        w = int(header[16]) << 24 | int(header[17]) << 16 | int(header[18]) << 8 | int(header[19])
+        h = int(header[20]) << 24 | int(header[21]) << 16 | int(header[22]) << 8 | int(header[23])
+        del header, np
+        # Read PPU debug (convert to native Python for JSON)
+        ppu_raw = _emulator.read_ppu_debug() if _emulator else {}
+        ppu = {k: int(v) if isinstance(v, (int, float)) and not isinstance(v, bool) else v for k, v in ppu_raw.items()}
         health = ppu.get("screen_health", "unknown")
+        # b64 encode in same expression to avoid arr leaking into return scope
+        b64_img = base64.b64encode(png_bytes).decode("ascii")
         return {
             "instrumentation": {
                 "png_len": len(png_bytes),
-                "raw_png_bytes_len": len(png_bytes),
                 "width": w,
                 "height": h,
-                "total_pixels": n,
-                "white_pixels": white,
-                "black_pixels": black,
-                "non_background_pixels": non_bg,
-                "mean_r": mean_r,
-                "mean_g": mean_g,
-                "mean_b": mean_b,
                 "render_source": "pil_raw_buffer",
-                "frame_count": _emulator.frame_count if _emulator else None,
+                "frame_count": int(_emulator.frame_count) if _emulator else None,
                 "ppu_screen_health": health,
                 "ppu_debug": ppu,
             },
-            "image": base64.b64encode(png_bytes).decode("ascii"),
+            "image": b64_img,
             "format": "png",
         }
     except Exception as e:

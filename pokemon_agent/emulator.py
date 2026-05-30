@@ -464,16 +464,16 @@ class PyBoyEmulator(Emulator):
         health, png_len = self._classify_screen_from_emulator()
         return {
             "available": True,
-            "lcdc_ff40": pb.memory[0xFF40] & 0xFF,
-            "stat_ff41": pb.memory[0xFF41] & 0xFF,
-            "ly_ff44": pb.memory[0xFF44] & 0xFF,
-            "wy_ff4a": pb.memory[0xFF4A] & 0xFF,
-            "wx_ff4b": pb.memory[0xFF4B] & 0xFF,
-            "if_ff0f": pb.memory[0xFF0F] & 0xFF,
-            "ie_ffff": pb.memory[0xFFFF] & 0xFF,
+            "lcdc_ff40": int(pb.memory[0xFF40] & 0xFF),
+            "stat_ff41": int(pb.memory[0xFF41] & 0xFF),
+            "ly_ff44": int(pb.memory[0xFF44] & 0xFF),
+            "wy_ff4a": int(pb.memory[0xFF4A] & 0xFF),
+            "wx_ff4b": int(pb.memory[0xFF4B] & 0xFF),
+            "if_ff0f": int(pb.memory[0xFF0F] & 0xFF),
+            "ie_ffff": int(pb.memory[0xFFFF] & 0xFF),
             "screen_health": health,
             "screen_png_len": png_len,
-            "frame": self.frame_count,
+            "frame": int(self.frame_count),
         }
 
     def _classify_screen_from_emulator(self) -> tuple[str, int]:
