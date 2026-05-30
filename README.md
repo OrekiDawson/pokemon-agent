@@ -1,266 +1,144 @@
-# 🎮 pokemon-agent
+# 小呦的后端 / pokemon-agent by Xiaoyou
 
-**AI-powered Pokémon gameplay agent with headless emulation, REST API, and live dashboard.**
+> 小呦帮 Oreki 玩宝可梦红的后端服务。基于 FastAPI + PyBoy，无窗口后台运行。
 
-Let any AI agent — [Hermes Agent](https://github.com/NousResearch/hermes-agent), Claude Code, Codex, or your own — play Pokémon games autonomously via a clean HTTP API. Runs headlessly on any server or terminal. No display, no GUI, no emulator window needed.
+## 小呦在用这个做什么？
+
+小呦是一个 AI agent，负责在 Pokemon Red 里推进主线。
+pokemon-agent 就是小呦的手和眼睛——通过 HTTP API 读取游戏状态、发送按键、执行存档。
 
 ```
 ┌──────────────────────┐
-│   Your AI Agent      │  Any LLM-powered agent
-│   (Hermes, Claude,   │  makes the decisions
-│    Codex, custom)    │
+│      Oreki           │  Oreki 下指令
+│      小呦             │  小呦做执行
 └─────────┬────────────┘
           │ HTTP API
 ┌─────────▼────────────┐
-│   pokemon-agent      │  This package:
-│   ┌────────────────┐ │  - Headless emulator
-│   │ Game Server    │ │  - Memory reader
-│   │ (FastAPI)      │ │  - Game state parser
-│   ├────────────────┤ │  - REST + WebSocket API
-│   │ Emulator       │ │  - Optional dashboard
-│   │ (PyBoy/PyGBA)  │ │
-│   └────────────────┘ │
-└──────────────────────┘
+│   pokemon-agent      │  小呦的后端：
+│   ┌────────────────┐ │  - 后台模拟器（PyBoy）
+│   │ Game Server    │ │  - 读游戏状态（RAM parser）
+│   │ (FastAPI)      │ │  - REST API（state/screenshot/action）
+│   ├────────────────┤ │  - 可选仪表盘
+│   │ Emulator       │ │
+│   │ (PyBoy)        │ │
+└───┴────────────────┘ │
 ```
 
-## Features
+## 小呦的安全原则
 
-- **🔌 Headless emulation** — No display server, X11, or GUI needed. Pure in-process emulation.
-- **🌐 REST API** — `GET /state`, `POST /action`, `GET /screenshot` — control the game over HTTP.
-- **📡 WebSocket** — Real-time event streaming for live monitoring.
-- **🧠 Structured game state** — RAM is parsed into clean JSON: party, bag, badges, map, battle, dialog.
-- **🎨 Live dashboard** — Optional web GUI to watch the AI play (Claude Plays Pokémon style).
-- **🎮 Multi-game** — Supports Game Boy (Pokémon Red/Blue) via PyBoy, GBA (FireRed) via PyGBA.
-- **🤖 Agent-agnostic** — Works with any AI agent, RL framework, or custom script.
+- 不搜索、不下载、不传播任何盗版 ROM
+- 所有操作基于真实 state 证据，不凭猜测按键
+- 不擅自删除存档或覆盖 checkpoint
+- 不把"计划"当"完成"
 
-## Quick Start
+## 核心 API
 
-### Installation
+小呦通过这些端点和游戏说话：
+
+| 端点 | 方法 | 小呦用来 |
+|------|------|---------|
+| `/state` | GET | 读当前坐标、队伍、战斗状态 |
+| `/screenshot` | GET | 看画面有没有 freeze |
+| `/screenshot/raw` | GET | 读 PPU 寄存器（lcdc/stat/ly） |
+| `/action` | POST | 发送按键（walk_up/press_a/wait_60） |
+| `/save` | POST | 保存 checkpoint |
+| `/load` | POST | 加载 checkpoint |
+
+## 技术栈
+
+- **模拟器**: PyBoy（无窗口后台模式）
+- **框架**: FastAPI
+- **内存读取**: 基于 pret/pokered 反编译的 RAM 地址表
+- **游戏类型**: Pokemon Red / Blue（Gen1 GB）
+
+## 小呦怎么用这个服务
+
+### 1. 启动服务
 
 ```bash
-# Core (emulator + API server)
-pip install pokemon-agent pyboy
-
-# With dashboard (optional web GUI)
-pip install pokemon-agent[dashboard] pyboy
+python -m pokemon_agent.cli serve --rom ./roms/PokemonRed.gb --port 9876 --data-dir ~/.pokemon-agent
 ```
 
-> **Note:** You must provide your own ROM file. This package does not include any game ROMs.
-
-### Start the Server
+### 2. 读 state
 
 ```bash
-pokemon-agent serve --rom path/to/pokemon_red.gb
+curl http://localhost:9876/state | python -m json.tool
 ```
 
-```
-╔══════════════════════════════════════╗
-║       🎮 Pokémon Agent Server       ║
-╚══════════════════════════════════════╝
-  Game:       Pokemon Red
-  ROM:        pokemon_red.gb
-  API:        http://localhost:8765
-  Dashboard:  http://localhost:8765/dashboard
-  WebSocket:  ws://localhost:8765/ws
-```
+返回内容：
+- `map` / `player.position` / `facing`
+- `party[]`（名字、等级、HP、技能）
+- `battle`（是否在战斗）
+- `dialog`（是否有文本框）
+- `keys[]`（当前按住的方向键）
 
-### Play from Any Agent
+### 3. 发动作
 
 ```bash
-# Get game state
-curl http://localhost:8765/state | python -m json.tool
-
-# Take a screenshot
-curl http://localhost:8765/screenshot -o screen.png
-
-# Send actions
-curl -X POST http://localhost:8765/action \
+curl -X POST http://localhost:9876/action \
   -H "Content-Type: application/json" \
-  -d '{"actions": ["walk_up", "walk_up", "press_a"]}'
-
-# Save/load state
-curl -X POST http://localhost:8765/save -d '{"name": "before_brock"}'
-curl -X POST http://localhost:8765/load -d '{"name": "before_brock"}'
+  -d '{"actions": ["walk_up", "walk_up", "wait_60"]}'
 ```
 
-### Game State (JSON)
-
-```json
-{
-  "player": {
-    "name": "ASH",
-    "money": 3000,
-    "badges": 1,
-    "badges_list": ["Boulder"],
-    "position": {"map_id": 1, "map_name": "PALLET TOWN", "x": 7, "y": 5},
-    "facing": "down",
-    "play_time": {"hours": 1, "minutes": 23, "seconds": 45}
-  },
-  "party": [
-    {
-      "nickname": "SQUIRTLE",
-      "species": "Squirtle",
-      "level": 12,
-      "hp": 33,
-      "max_hp": 33,
-      "moves": ["Tackle", "Tail Whip", "Bubble"],
-      "status": null,
-      "types": ["Water"]
-    }
-  ],
-  "bag": [{"item": "Potion", "quantity": 3}],
-  "battle": null,
-  "dialog": {"active": false, "text": null},
-  "flags": {"has_pokedex": true, "badges_earned": ["Boulder"]},
-  "metadata": {"game": "Pokemon Red", "frame_count": 12345}
-}
-```
-
-## Actions Reference
-
-| Action | Description |
-|--------|-------------|
-| `press_a` | Press A button (10 frames press + 20 wait) |
-| `press_b` | Press B button |
-| `press_start` | Press Start button |
-| `press_select` | Press Select button |
-| `walk_up` | Walk one tile up (16 frames + 8 wait) |
-| `walk_down` | Walk one tile down |
-| `walk_left` | Walk one tile left |
-| `walk_right` | Walk one tile right |
-| `hold_a_30` | Hold A for 30 frames |
-| `wait_60` | Wait 60 frames (~1 second) |
-| `a_until_dialog_end` | Press A repeatedly until dialog closes |
-
-## Dashboard
-
-Install with the dashboard extra to get a live web GUI:
+### 4. 保存/加载 checkpoint
 
 ```bash
-pip install pokemon-agent[dashboard]
+curl -X POST http://localhost:9876/save -d '{"name": "cp10_forest_entry"}'
+curl -X POST http://localhost:9876/load -d '{"name": "cp10_forest_entry"}'
 ```
 
-Then open `http://localhost:8765/dashboard` in your browser.
+## 小呦的 checkpoint 命名
 
-The dashboard shows:
-- **Live game screenshot** — Updated each turn with decorative corner brackets
-- **AI reasoning stream** — Watch the agent think in real-time
-- **Team status** — All party Pokémon with HP bars, types, levels
-- **Badge progress** — Visual badge tracker
-- **Action log** — Color-coded history of all actions and reasoning
-
-## Supported Games
-
-| Game | Emulator | Status | Install |
-|------|----------|--------|---------|
-| Pokémon Red/Blue | PyBoy | ✅ Supported | `pip install pyboy` |
-| Pokémon Yellow | PyBoy | ✅ Supported | `pip install pyboy` |
-| Pokémon Gold/Silver | PyBoy | 🔜 Planned | `pip install pyboy` |
-| Pokémon FireRed/LeafGreen | PyGBA | 🔜 Phase 2 | `pip install pygba` |
-| Pokémon Ruby/Sapphire/Emerald | PyGBA | 🔜 Phase 2 | `pip install pygba` |
-
-## Use with Hermes Agent
-
-[Hermes Agent](https://github.com/NousResearch/hermes-agent) has a built-in `pokemon-player` skill:
+小呦的存档点用 `cp<数字>_<描述>` 格式：
 
 ```
-You: "Play Pokémon Red"
-Hermes: *installs pokemon-agent, starts server, begins playing*
+cp08_route2_to_viridian_forest_gate   — 从 Route 2 进入森林
+cp09_viridian_forest_south_entrance    — 森林南入口
+cp10_forest_entry_step_17_44           — 森林里走了几步
 ```
 
-The skill teaches Hermes battle strategy, exploration patterns, team management, and how to use its persistent memory for tracking objectives across sessions.
+存档在 `~/.pokemon-agent/saves/`（符号链接到项目 evidence/ 目录）。
 
-## API Reference
+## 已知问题（Gen1）
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/` | GET | Server info |
-| `/state` | GET | Full game state JSON |
-| `/screenshot` | GET | Current frame (PNG) |
-| `/screenshot/base64` | GET | Current frame (base64 JSON) |
-| `/action` | POST | Execute game actions |
-| `/save` | POST | Save emulator state |
-| `/load` | POST | Load emulator state |
-| `/saves` | GET | List saved states |
-| `/minimap` | GET | ASCII minimap |
-| `/health` | GET | Health check |
-| `/ws` | WebSocket | Live event stream |
-| `/dashboard` | GET | Web dashboard (if installed) |
+### Battle Render Freeze
 
-## Python API
+当战斗画面卡在 intro_or_text 且 `screen_health=blank` 时，parser 所有 trust gate 关闭，无法继续。
+此时 `hjoy_input` 经常显示 207（A+B+SELECT+START+UP+DOWN 全按住），但 `keys=[]`。
+这是 PyBoy HRAM 闩锁问题，不是小呦代码 bug。
+freeze_count >= 2 时触发 hard_stop，必须受控重启到锚点。
 
-You can also use `pokemon-agent` as a library:
+### PPU 寄存器
 
-```python
-from pokemon_agent.emulator import create_emulator
-from pokemon_agent.memory.red import PokemonRedReader
-from pokemon_agent.state.builder import build_game_state
+| 地址 | 名称 | 小呦用这个判断 |
+|------|------|--------------|
+| 0xFF40 | lcdc | LCD 控制器是否启用 |
+| 0xFF41 | stat | PPU 模式（0= HBlank, 1= VBlank, 2= OAM, 3= VRAM） |
+| 0xFF44 | ly | 当前扫描线（freeze 时经常 ly=0） |
+| 0xFF4A | wy | 文本框 Y 坐标 |
+| 0xFF4B | wx | 文本框 X 坐标 |
 
-# Load ROM headlessly
-emu = create_emulator("pokemon_red.gb")
-
-# Create memory reader
-reader = PokemonRedReader(emu)
-
-# Get structured game state
-state = build_game_state(reader)
-print(f"Player: {state['player']['name']}")
-print(f"Badges: {state['player']['badges']}")
-print(f"Party: {[p['species'] for p in state['party']]}")
-
-# Send inputs
-emu.press("a", frames=10)
-emu.tick(20)
-
-# Get screenshot
-image = emu.get_screen()  # PIL Image
-image.save("screenshot.png")
-```
-
-## Architecture
+## 架构
 
 ```
 pokemon_agent/
-├── __init__.py          # Package version
-├── cli.py               # CLI entry point (pokemon-agent command)
-├── server.py            # FastAPI game server (REST + WebSocket)
-├── emulator.py          # PyBoy/PyGBA wrapper (headless)
-├── pathfinding.py       # A* grid navigation
+├── __init__.py          # 版本号
+├── cli.py               # 命令行入口（serve/eval）
+├── server.py            # FastAPI 游戏服务器
+├── emulator.py          # PyBoy 包装器（无窗口后台模式）
 ├── memory/
-│   ├── reader.py        # Abstract game memory reader
-│   ├── red.py           # Pokémon Red/Blue RAM parser
-│   └── firered.py       # FireRed RAM parser (Phase 2)
-├── state/
-│   └── builder.py       # Structured state builder
-└── dashboard/           # Optional [dashboard] extra
-    ├── mount.py         # FastAPI static mount
-    ├── history.py       # JSONL event logger
-    └── static/
-        ├── index.html   # Dashboard page
-        ├── style.css    # Dark cyberpunk theme
-        └── app.js       # WebSocket client
+│   └── red.py           # Pokemon Red RAM 解析器（基于 pret/pokered）
+└── state/
+    └── builder.py       # 结构化 state 构造器
 ```
 
-## Contributing
+## 小呦学到的教训
 
-Contributions welcome! Areas where help is needed:
+- `hjoy_input=207` 时 PyBoy HRAM 闩锁，release_all_keys 无法清除
+- battle=true 时立即停，不能继续走导航
+- screenshot 返回 503 时可能是 freeze，不是服务挂了
+- numpy.uint8 必须 `int()` 才能 JSON 序列化
 
-- **Pokémon Gold/Silver/Crystal** memory reader (`memory/gold.py`)
-- **Pokémon FireRed** full memory reader with decryption (`memory/firered.py`)
-- **Pokémon Emerald** memory reader (`memory/emerald.py`)
-- **Battle AI** improvements and type matchup optimization
-- **Dashboard** enhancements (progress tracking, key moments, replay)
-- **Tests** for memory readers and state builders
+---
 
-## License
-
-MIT — see [LICENSE](LICENSE).
-
-## Acknowledgments
-
-- [PyBoy](https://github.com/Baekalfen/PyBoy) — Game Boy emulator in Python
-- [PyGBA](https://github.com/dvruette/pygba) — GBA emulator wrapper
-- [pret/pokered](https://github.com/pret/pokered) — Pokémon Red decompilation (memory addresses)
-- [pret/pokefirered](https://github.com/pret/pokefirered) — FireRed decompilation
-- [gpt-play-pokemon-firered](https://github.com/Clad3815/gpt-play-pokemon-firered) — Architecture inspiration
-- [Hermes Agent](https://github.com/NousResearch/hermes-agent) — AI agent platform by Nous Research
+小呦正在努力学会用这个工具更稳地推进主线。加油！
