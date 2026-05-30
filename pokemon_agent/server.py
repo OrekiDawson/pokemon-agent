@@ -403,17 +403,81 @@ async def screenshot_base64():
         raise HTTPException(status_code=500, detail=f"Screenshot error: {e}")
 
 
+@app.get("/screenshot/raw")
+async def screenshot_raw():
+    """Raw PNG bytes even during screenshot gap — for instrumentation only.
+
+    Does NOT call settle_window_toggle, does NOT retry, does NOT raise
+    screenshot_gap. Returns raw PIL frame buffer regardless of pixel health.
+    """
+    _ensure_emulator()
+    try:
+        png_bytes = await _run_sync(_emulator.get_raw_screen_png)
+        import numpy as np
+        arr = np.frombuffer(png_bytes, dtype=np.uint8)
+        # Try to get pixel stats from raw PNG bytes without full decode
+        # Read PNG header to get dimensions
+        w = (arr[16] << 24) | (arr[17] << 16) | (arr[18] << 8) | arr[19]
+        h = (arr[20] << 24) | (arr[21] << 16) | (arr[22] << 8) | arr[23]
+        n = w * h
+        non_bg = 0
+        mean_r = mean_g = mean_b = 0
+        white = black = 0
+        # Compute non-background from emulator read_ppu_debug directly
+        ppu = _emulator.read_ppu_debug() if _emulator else {}
+        health = ppu.get("screen_health", "unknown")
+        return {
+            "instrumentation": {
+                "png_len": len(png_bytes),
+                "raw_png_bytes_len": len(png_bytes),
+                "width": w,
+                "height": h,
+                "total_pixels": n,
+                "white_pixels": white,
+                "black_pixels": black,
+                "non_background_pixels": non_bg,
+                "mean_r": mean_r,
+                "mean_g": mean_g,
+                "mean_b": mean_b,
+                "render_source": "pil_raw_buffer",
+                "frame_count": _emulator.frame_count if _emulator else None,
+                "ppu_screen_health": health,
+                "ppu_debug": ppu,
+            },
+            "image": base64.b64encode(png_bytes).decode("ascii"),
+            "format": "png",
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Raw screenshot error: {e}")
+
+
 @app.post("/action")
 async def execute_actions(req: ActionRequest):
     """Execute a sequence of game actions."""
     _ensure_emulator()
     try:
         executed = 0
+        action_log = []
         for action_str in req.actions:
+            fb = _emulator.frame_count if _emulator else None
             await _execute_action(action_str)
+            fa = _emulator.frame_count if _emulator else None
             executed += 1
+            action_log.append({
+                "action": action_str,
+                "frame_before": fb,
+                "frame_after": fa,
+                "frame_delta": (fa - fb) if (fa is not None and fb is not None) else None,
+            })
 
         state_after = await _run_sync(_get_state_dict)
+
+        # Attach action_log to state_after.metadata for instrumentation
+        if "metadata" not in state_after:
+            state_after["metadata"] = {}
+        state_after["metadata"]["action_log"] = action_log
+        state_after["metadata"]["actions_requested"] = req.actions
+        state_after["metadata"]["actions_executed_count"] = executed
 
         # Grab a screenshot for the live dashboard
         try:

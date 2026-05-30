@@ -1022,6 +1022,21 @@ class RedBlueMemoryReader(GameMemoryReader):
             result["battle_phase"] = battle_phase
             result["battle_menu_visible"] = main_menu_visible
 
+            # battle_phase_reason: instrumentation field explaining why battle_phase
+            # was classified as it was, without changing trust gate logic
+            if main_menu_visible:
+                result["battle_phase_reason"] = (
+                    f"joy_ignore_bit5={bool(joy_ignore&0x20)} (in_dialog=False) and "
+                    f"text_box_id={text_box_id} in (0,1) → main_menu_visible=True"
+                )
+            else:
+                reason_parts = []
+                if in_dialog:
+                    reason_parts.append("joy_ignore_bit5=1 (in_dialog=True)")
+                if text_box_id not in (0, 1):
+                    reason_parts.append(f"text_box_id={text_box_id} not in (0,1)")
+                result["battle_phase_reason"] = " AND ".join(reason_parts) if reason_parts else "unknown"
+
             # --- raw enemy data (always read, trust gated below) ---
             enemy_species = self.emu.read_u8(ADDR_ENEMY_SPECIES)
             enemy_data = self.emu.read_range(ADDR_ENEMY_DATA, PARTY_MON_SIZE)
@@ -1193,6 +1208,9 @@ class RedBlueMemoryReader(GameMemoryReader):
             "text_bytes_hex": text_bytes_hex,
             "text_decode_status": decode_status,
             "dialog_confidence": dialog_confidence,
+            # Instrumentation: source of text field (no change to trust gate logic)
+            "dialog_text_source": "wstringbuffer_0xcf4b_parser" if decoded_text else "none",
+            "dialog_text_changed_since_last_state": None,  # requires caller to track prior text
         }
 
     def read_gen1_input_debug(self) -> Dict[str, Any]:
@@ -1363,6 +1381,16 @@ class RedBlueMemoryReader(GameMemoryReader):
             "walk_counter": walk_counter,
             # Gate decision
             "gate_conclusion": gate_conclusion,
+            # Instrumentation: semantics of HRAM joypad fields
+            # hjoy_input (0xFF00) = raw I/O port, read during VBlank IRQ
+            # hjoy_held (0xFF5A) = currently held keys this frame
+            # hjoy_pressed (0xFF59) = newly pressed keys (1-frame flag, cleared after game reads)
+            # hjoy_released (0xFF58) = newly released keys
+            # All HRAM fields are active-HIGH semantics unless otherwise documented by PyBoy
+            # The PyBoy backend reads these as PyBoy internal mirrors, not direct HW registers
+            "joy_field_semantics": "unverified",
+            "joy_field_active_high": True,  # assumption — PyBoy docs indicate active-high
+            "joy_field_stale_risk": "save_state_or_release_all_keys_artifacts",  # concern from hjoy_pressed=0xFF after actions
         }
 
     def read_map_info(self) -> Dict[str, Any]:

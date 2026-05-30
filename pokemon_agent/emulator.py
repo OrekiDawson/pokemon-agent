@@ -359,11 +359,26 @@ class PyBoyEmulator(Emulator):
             self.settle_window_toggle()
 
     def _raw_screen_png(self) -> bytes:
-        """Grab the current screen as PNG bytes (no retry)."""
+        """Grab the current screen as PNG bytes (no retry, no classify).
+
+        This is the raw PIL output — use this for instrumentation when
+        get_screen_png_safe() raises screenshot_gap so the caller can
+        inspect the actual pixel buffer instead of receiving only a
+        classified 503.
+        """
         screen = self.get_screen()
         buf = io.BytesIO()
         screen.save(buf, format="PNG")
         return buf.getvalue()
+
+    def get_raw_screen_png(self) -> bytes:
+        """Return raw PNG bytes without retry or classify.
+
+        Unlike get_screen_png_safe this does NOT call settle_window_toggle,
+        does NOT retry on blank frames, and does NOT raise screenshot_gap.
+        Use for instrumentation only.
+        """
+        return self._raw_screen_png()
 
     def get_screen_png_safe(self) -> bytes:
         """Return healthy screenshot PNG bytes.
